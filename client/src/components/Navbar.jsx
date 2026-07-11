@@ -1,7 +1,9 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-50">
@@ -37,7 +39,8 @@ export default function Navbar() {
             >
               Timings
             </a>
-            <button className="bg-blue-600 text-white px-5 py-2 rounded-full font-medium hover:bg-blue-700 transition shadow-sm">
+            <button className="bg-blue-600 text-white px-5 py-2 rounded-full font-medium hover:bg-blue-700 transition shadow-sm"
+            onClick={() => navigate("/book-appointment")}>
               Book Appointment
             </button>
           </div>
@@ -86,7 +89,8 @@ export default function Navbar() {
           <a href="#timings" className="block text-gray-600 py-2">
             Timings
           </a>
-          <button className="w-full bg-blue-600 text-white px-5 py-2 rounded-xl font-medium">
+          <button className="w-full bg-blue-600 text-white px-5 py-2 rounded-xl font-medium"
+            onClick={() => navigate("/book-appointment")}>
             Book Appointment
           </button>
         </div>

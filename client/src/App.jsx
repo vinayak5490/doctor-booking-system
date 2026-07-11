@@ -4,13 +4,21 @@ import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import './App.css'
 import { Home } from './pages/Home'
+import { Routes, Route } from 'react-router-dom';
+import BookAppointment from './pages/BookAppointment';
+import BookingSucess from './pages/BookingSucess';
+import CancelBooking from "./pages/CancelBooking";
 
 function App() {
 
   return (
-    <>
-      <Home />;
-    </>
+    <Routes>
+      <Route path='/' element={<Home/>}/>
+
+      <Route path='/book-appointment' element={<BookAppointment />} />
+
+      <Route path='/cancel-booking' element={<CancelBooking />} />
+    </Routes>
   )
 }
 

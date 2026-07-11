@@ -1,8 +1,9 @@
 import React from "react";
 // 1. Import the image correctly from your assets folder
 import heroIllustration from "../assets/images/hospital-service-concept-flat-illustration.png";
-
+import { useNavigate } from "react-router-dom";
 export default function Hero() {
+    const navigate = useNavigate();
   return (
     <section className="relative bg-gradient-to-br from-blue-50 to-indigo-50 py-20 lg:py-32 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-12 items-center">
@@ -19,7 +20,8 @@ export default function Hero() {
             standard safely from your home or clinic visits.
           </p>
           <div className="flex flex-wrap gap-4">
-            <button className="bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-blue-700 shadow-md hover:shadow-lg transition">
+            <button className="bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-blue-700 shadow-md hover:shadow-lg transition"
+                onClick = {() => navigate("/book-appointment")}>
               Book Appointment
             </button>
             <button className="bg-white text-gray-700 border border-gray-300 px-8 py-3 rounded-xl font-semibold hover:bg-gray-50 transition">
