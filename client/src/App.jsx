@@ -8,6 +8,7 @@ import { Routes, Route } from 'react-router-dom';
 import BookAppointment from './pages/BookAppointment';
 import BookingSucess from './pages/BookingSucess'
 import CancelBooking from "./pages/CancelBooking";
+import AppointmentLookup from './pages/AppointmentLookup'
 
 function App() {
 
@@ -20,6 +21,8 @@ function App() {
       <Route path="/booking-success" element={<BookingSucess />} />
 
       <Route path="/cancel-booking" element={<CancelBooking />} />
+
+      <Route path='/appointment-lookup' element={<AppointmentLookup />} />
     </Routes>
   );
 }
