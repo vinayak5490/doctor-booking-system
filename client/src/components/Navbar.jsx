@@ -39,8 +39,17 @@ export default function Navbar() {
             >
               Timings
             </a>
-            <button className="bg-blue-600 text-white px-5 py-2 rounded-full font-medium hover:bg-blue-700 transition shadow-sm"
-            onClick={() => navigate("/book-appointment")}>
+            <button
+              className="text-sm font-medium text-gray-600 hover:text-blue-600 transition"
+              onClick={() => navigate("/appointment-lookup")}
+            >
+              Manage Appointment
+            </button>
+
+            <button
+              className="bg-blue-600 text-white px-5 py-2 rounded-full font-medium hover:bg-blue-700 transition shadow-sm"
+              onClick={() => navigate("/book-appointment")}
+            >
               Book Appointment
             </button>
           </div>
@@ -89,8 +98,19 @@ export default function Navbar() {
           <a href="#timings" className="block text-gray-600 py-2">
             Timings
           </a>
-          <button className="w-full bg-blue-600 text-white px-5 py-2 rounded-xl font-medium"
-            onClick={() => navigate("/book-appointment")}>
+          <button
+            className="w-full text-left text-gray-600 py-2"
+            onClick={() => {
+              navigate("/appointment-lookup");
+              setIsOpen(false);
+            }}
+          >
+            Manage Appointment
+          </button>
+          <button
+            className="w-full bg-blue-600 text-white px-5 py-2 rounded-xl font-medium"
+            onClick={() => navigate("/book-appointment")}
+          >
             Book Appointment
           </button>
         </div>
