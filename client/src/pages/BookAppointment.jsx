@@ -78,6 +78,17 @@ export default function BookAppointment() {
               </span>
             </div>
           </div>
+
+          {/* View Full Profile Action Link */}
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => navigate("/doctor-profile")}
+              className="w-full bg-gray-50 hover:bg-gray-100 text-gray-700 hover:text-blue-600 font-medium py-2 rounded-xl text-xs transition border border-gray-100 flex items-center justify-center gap-1"
+            >
+              👁️ View Full Doctor Profile
+            </button>
+          </div>
         </div>
 
         {/* Right Side: Interactive Dynamic Booking Funnel */}
@@ -100,7 +111,7 @@ export default function BookAppointment() {
               />
             </div>
 
-            {/* RESTORED: Slot Grid Selection */}
+            {/* Slot Grid Selection */}
             {selectedDate && (
               <div className="animate-fadeIn">
                 <label className="block text-sm font-semibold text-gray-700 mb-3">
@@ -149,7 +160,6 @@ export default function BookAppointment() {
                     onChange={handleInputChange}
                     className="w-full border border-gray-200 rounded-xl px-4 py-2"
                     placeholder="John Doe"
-                    required
                   />
                 </div>
                 <div>
@@ -164,7 +174,6 @@ export default function BookAppointment() {
                     onChange={handleInputChange}
                     className="w-full border border-gray-200 rounded-xl px-4 py-2"
                     placeholder="9876543210"
-                    required
                   />
                 </div>
               </div>
@@ -196,7 +205,6 @@ export default function BookAppointment() {
                     onChange={handleInputChange}
                     className="w-full border border-gray-200 rounded-xl px-4 py-2"
                     placeholder="32"
-                    required
                   />
                 </div>
               </div>

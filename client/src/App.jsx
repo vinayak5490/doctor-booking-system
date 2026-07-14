@@ -9,6 +9,8 @@ import BookAppointment from './pages/BookAppointment';
 import BookingSucess from './pages/BookingSucess'
 import CancelBooking from "./pages/CancelBooking";
 import AppointmentLookup from './pages/AppointmentLookup'
+import DoctorProfile from './pages/DoctorProfile';
+import RescheduleAppointment from './pages/RescheduleAppointment'
 
 function App() {
 
@@ -23,6 +25,11 @@ function App() {
       <Route path="/cancel-booking" element={<CancelBooking />} />
 
       <Route path='/appointment-lookup' element={<AppointmentLookup />} />
+
+      <Route path='/doctor-profile' element={<DoctorProfile/>} />
+
+      <Route path='/reshedule-appointment' element={<RescheduleAppointment />} />
+      
     </Routes>
   );
 }
