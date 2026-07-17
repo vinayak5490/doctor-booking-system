@@ -45,7 +45,7 @@ export const getAllAppointments = async(req, res)=>{
             queryEngine.$or = [
                 {patientName: {$regex: search, $options: "i"}},
                 {phone: {$regex: search, $options: "i"}},
-                {bookingId: {$regex: search, $options; "i"}},
+                {bookingId: {$regex: search, $options: "i"}},
             ];
         }
 
