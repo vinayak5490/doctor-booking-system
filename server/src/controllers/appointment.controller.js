@@ -55,3 +55,23 @@ export const getAllAppointments = async(req, res)=>{
         res.status(500).json({success: false, message: error.message});
     }
 };
+
+// @desc    Lookup Single Appointment
+// @route   GET /api/appointments/:bookingId
+// @access  Public
+
+export const lookupAppointment = async(req, res)=>{
+    try {
+        const record = await Appointment.findOne({bookingId: req.params.bookingId});
+        if(!record){
+            return res.status(404).json({success: false, message: "Appointment record not found"});
+        }
+        res.status(200).json({success: true, data: record});
+    } catch (error) {
+        res.status(500).json({success: false, message: error.message});
+    }
+};
+
+// @desc    Modify Appointment Status Inline
+// @route   PATCH /api/appointments/:id/status
+// @access  Protected (Admin Only)
