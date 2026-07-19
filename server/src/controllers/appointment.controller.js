@@ -75,3 +75,22 @@ export const lookupAppointment = async(req, res)=>{
 // @desc    Modify Appointment Status Inline
 // @route   PATCH /api/appointments/:id/status
 // @access  Protected (Admin Only)
+
+export const updateAppointmentStatus = async (req, res)=>{
+    try {
+        const { status } = req.body;
+        const record = await Appointment.findByIdAndUpdate(
+            req.params.id,
+            { status },
+            { new: true, runValidators: true}
+        )
+
+        if(!record){
+            return res.status(404).json({success: false, message: "Record targets not found."});
+        }
+        res.status(200).json({success: true, message: `Status updated to ${status}.`, data: record});
+    } catch (error) {
+        res.status(500).json({success: false, message: error.message});
+    }
+};
+
