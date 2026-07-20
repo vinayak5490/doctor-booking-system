@@ -1,4 +1,4 @@
-import Appointment from "../models/Appointment";
+import Appointment from "../models/Appointment.js";
 // @desc    Book an Appointment
 // @route   POST /api/appointments
 // @access  Public

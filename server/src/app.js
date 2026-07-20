@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import authRoutes from "./routes/auth.routes.js";
+import appointmentRoutes from "./routes/appointment.routes.js";
 
 const app = express();
 
@@ -13,6 +14,7 @@ app.use(express.urlencoded({extended: true}));
 
 //Routing mounts
 app.use("/api/auth", authRoutes);
+app.use("/api/appointments", appointmentRoutes); //Hooked up successfully
 
 //catch-all 404 route handler
 app.use((req, res)=>{
