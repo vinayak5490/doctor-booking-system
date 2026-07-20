@@ -33,7 +33,7 @@ const appointmentSchema = new mongoose.Schema(
       required: true,
       enum: ["Male", "Female", "Other"],
     },
-    Symptoms: {
+    symptoms: {
       type: String,
       trim: true,
       default: "",
@@ -67,7 +67,7 @@ appointmentSchema.pre("validate", function (next) {
     const uniqueSuffix = Math.floor(1000 + Math.random() * 9000); // 4-digit token
     this.bookingId = `APT-${uniqueSuffix}`;
   }
-  next();
+  // next();
 });
 
 const Appointment = mongoose.model("Appointment", appointmentSchema);

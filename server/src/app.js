@@ -20,7 +20,7 @@ app.use("/api/appointments", appointmentRoutes); //Hooked up successfully
 app.use((req, res)=>{
     res.status(404).json({
         success: false,
-        manage: `Resoureces Not Found: ${req.originalUrl}`
+        manage: `Resources Not Found: ${req.originalUrl}`
     })
 })
 

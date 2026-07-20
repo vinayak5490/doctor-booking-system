@@ -11,9 +11,9 @@ export const adminLogin = async(req, res) =>{
             res.status(200).json({
                 success: true,
                 message: "Authentication successful",
-                token: generateToken({id: admin.__id}),
+                token: generateToken({id: admin._id}),
                 admin:{
-                    id: admin.__id,
+                    id: admin._id,
                     name: admin.name,
                     email: admin.email,
                 },
