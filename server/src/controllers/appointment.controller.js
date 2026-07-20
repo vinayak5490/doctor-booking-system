@@ -95,3 +95,29 @@ export const updateAppointmentStatus = async (req, res)=>{
 };
 
 
+// @desc    Reschedule Booking
+// @route   PUT /api/appointments/reschedule/:bookingId
+// @access  Public
+export const rescheduleAppointment = async (req, res)=>{
+    try {
+        const { data, slot } = req.body;
+
+        //Conflict validation logic
+        const conflict = await Appointment.findOne({date, slot, status: {$ne: "Cancelled"}});
+        if(conflict){
+            return res.status(400).json({success: false, message: "Target slot is unavailable."});
+        }
+
+        const updatedRecord = await Appointment.findOneAndUpdate(
+            {bookingId: req.params.bookingId},
+            {date, slot, status: "Pending"},
+            {new: true}
+        );
+        if(!updatedRecord){
+            return res.status(404).json({success: false, message: "Active record identifier missing."});
+        }
+        res.status(200).json({success: true, message: "Rescheduled successfully.", data: updatedRecord})
+    } catch (error) {
+        res.status(500).json({success: false, message: error.message});
+    }
+}
