@@ -62,6 +62,7 @@ export const getAllAppointments = async(req, res)=>{
 
 export const lookupAppointment = async(req, res)=>{
     try {
+        console.log("Incoming query:", req.query.query)
         const { query } = req.query;
         if(!query){
             return res.status(400).json({
@@ -71,7 +72,7 @@ export const lookupAppointment = async(req, res)=>{
         }
 
         //Booking ID search
-        if(query.toUpperCase().startsWith("API-")){
+        if(query.toUpperCase().startsWith("APT-")){
             const appointment = await Appointment.findOne({
                 bookingId: query.toUpperCase(),
             });
