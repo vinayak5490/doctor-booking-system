@@ -22,33 +22,42 @@ import Patients from "./admin/pages/Patients";
 import AdminDoctorProfile from "./admin/pages/AdminDoctorProfile";
 import Settings from "./admin/pages/Settings";
 
+//react-toaster
+import { Toaster } from "react-hot-toast";
+
 function App() {
   return (
-    <Routes>
-      {/* Patient Routes */}
-      <Route path="/" element={<Home />} />
-      <Route path="/doctor-profile" element={<DoctorProfile />} />
-      <Route path="/book-appointment" element={<BookAppointment />} />
-      <Route path="/booking-success" element={<BookingSucess />} />
-      <Route path="/appointment-lookup" element={<AppointmentLookup />} />
-      <Route path="/cancel-booking" element={<CancelBooking />} />
-      <Route
-        path="/reschedule-appointment"
-        element={<RescheduleAppointment />}
-      />
+    <>
+      <Toaster 
+      position="top-right"
+      reverseOrder={false}
+       />
+      <Routes>
+        {/* Patient Routes */}
+        <Route path="/" element={<Home />} />
+        <Route path="/doctor-profile" element={<DoctorProfile />} />
+        <Route path="/book-appointment" element={<BookAppointment />} />
+        <Route path="/booking-success" element={<BookingSucess />} />
+        <Route path="/appointment-lookup" element={<AppointmentLookup />} />
+        <Route path="/cancel-booking" element={<CancelBooking />} />
+        <Route
+          path="/reschedule-appointment"
+          element={<RescheduleAppointment />}
+        />
 
-      {/* Admin Routes - Bound with Shared Admin Layout */}
-      <Route path="/admin/login" element={<Login />} />
+        {/* Admin Routes - Bound with Shared Admin Layout */}
+        <Route path="/admin/login" element={<Login />} />
 
-      <Route path="/admin" element={<AdminLayout />}>
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="appointments" element={<Appointments />} />
-        <Route path="calendar" element={<Calendar />} />
-        <Route path="patients" element={<Patients />} />
-        <Route path="profile" element={<AdminDoctorProfile />} />
-        <Route path="settings" element={<Settings />} />
-      </Route>
-    </Routes>
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="appointments" element={<Appointments />} />
+          <Route path="calendar" element={<Calendar />} />
+          <Route path="patients" element={<Patients />} />
+          <Route path="profile" element={<AdminDoctorProfile />} />
+          <Route path="settings" element={<Settings />} />
+        </Route>
+      </Routes>
+    </>
   );
 }
 

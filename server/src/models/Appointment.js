@@ -62,7 +62,7 @@ const appointmentSchema = new mongoose.Schema(
 );
 
 // Pre-validate hook to generate readable Booking Identifiers if not present
-appointmentSchema.pre("validate", function (next) {
+appointmentSchema.pre("validate", function () {
   if (!this.bookingId) {
     const uniqueSuffix = Math.floor(1000 + Math.random() * 9000); // 4-digit token
     this.bookingId = `APT-${uniqueSuffix}`;

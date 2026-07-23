@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 export default function BookAppointment() {
   const navigate = useNavigate();
@@ -31,11 +33,36 @@ export default function BookAppointment() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleBookingSubmit = (e) => {
+  const handleBookingSubmit = async(e) => {
     e.preventDefault();
+    try{
+    const appointmentData = {
+      patientName: formData.fullName,
+      phone: formData.phone,
+      email: formData.email,
+      age: Number(formData.age),
+      gender: formData.gender,
+      symptoms: formData.symptoms,
+      date: selectedDate,
+      slot: selectedDate
+    }
+
+    const response = await axios.post(
+      "/api/appointments",
+      appointmentData
+    )
+
+    toast.success(response.data.message);
     navigate("/booking-success", {
       state: { date: selectedDate, time: selectedSlot, ...formData },
     });
+  }catch(error){
+    console.error(error);
+    toast.error(
+      error.response?.data?.message ||
+      "Unable to book appointment."
+    );
+  }
   };
 
   return (
