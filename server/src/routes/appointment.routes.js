@@ -6,7 +6,7 @@ const router = express.Router();
 
 //Public Operational Patient Gateways
 router.post("/", createAppointment);
-router.get("/lookup/:bookingId", lookupAppointment);
+router.get("/search", lookupAppointment);
 router.put("/reschedule/:bookingId", rescheduleAppointment);
 
 //Firewall Protected Admin Operations

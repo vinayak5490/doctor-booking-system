@@ -57,19 +57,61 @@ export const getAllAppointments = async(req, res)=>{
 };
 
 // @desc    Lookup Single Appointment
-// @route   GET /api/appointments/:bookingId
+// @route   GET /api/appointments/search?query=9876543210
 // @access  Public
 
 export const lookupAppointment = async(req, res)=>{
     try {
-        const record = await Appointment.findOne({bookingId: req.params.bookingId});
-        if(!record){
-            return res.status(404).json({success: false, message: "Appointment record not found"});
+        const { query } = req.query;
+        if(!query){
+            return res.status(400).json({
+                success: false,
+                message: "Search query is required",
+            });
         }
-        res.status(200).json({success: true, data: record});
+
+        //Booking ID search
+        if(query.toUpperCase().startsWith("API-")){
+            const appointment = await Appointment.findOne({
+                bookingId: query.toUpperCase(),
+            });
+
+            if(!appointment){
+                return res.status(404).json({
+                    success: false,
+                    message: "Appointment not found",
+                });
+            }
+
+            return res.status(200).json({
+                success: true,
+                type: "bookingId",
+                data: appointment,
+            });
+        }
+
+        //Phone Number search
+        const appointments = await Appointment.findOne({
+            phone: query,
+        }).sort({ createdAt: -1});
+
+        if(appointments.length === 0){
+            return res.status(404).json({
+                success: false,
+                message: "No appointments found",
+            });
+        }
+        res.status(200).json({
+            success: true,
+            type: "phone",
+            data: appointments,
+        });
     } catch (error) {
-        res.status(500).json({success: false, message: error.message});
-    }
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    };
 };
 
 // @desc    Modify Appointment Status Inline

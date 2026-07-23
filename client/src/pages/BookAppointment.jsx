@@ -44,7 +44,7 @@ export default function BookAppointment() {
       gender: formData.gender,
       symptoms: formData.symptoms,
       date: selectedDate,
-      slot: selectedDate
+      slot: selectedSlot
     }
 
     const response = await axios.post(
