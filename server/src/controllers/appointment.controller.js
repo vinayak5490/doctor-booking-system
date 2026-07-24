@@ -143,9 +143,9 @@ export const updateAppointmentStatus = async (req, res)=>{
 // @access  Public
 export const rescheduleAppointment = async (req, res)=>{
     try {
-        const { data, slot } = req.body;
+        const { date, slot } = req.body;
 
-        if(!data || !slot){
+        if(!date || !slot){
             return res.status(400).json({
                 success: false,
                 message: "Date and slot are required."

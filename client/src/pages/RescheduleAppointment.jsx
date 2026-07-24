@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 export default function RescheduleAppointment() {
   const location = useLocation();
@@ -13,6 +15,7 @@ export default function RescheduleAppointment() {
   const [newSlot, setNewSlot] = useState("");
   const [loading, setLoading] = useState(false);
   const [isRescheduled, setIsRescheduled] = useState(false);
+  const [updatedAppointment, setUpdatedAppointment] = useState(appointment);
 
   const availableSlots = [
     "10:00 AM",
@@ -24,17 +27,35 @@ export default function RescheduleAppointment() {
     "02:00 PM",
   ];
 
-  const handleRescheduleSubmit = (e) => {
+  const handleRescheduleSubmit = async (e) => {
     e.preventDefault();
-    if (!newSlot) return;
+    
+    if(!newSlot){
+      toast.error("Please select a time slot.");
+      return;
+    }
 
     setLoading(true);
 
-    // Mock API patching sequence
-    setTimeout(() => {
+    try {
+      const response = await axios.put(
+        `/api/appointments/reschedule/${appointment.bookingId}`,
+        {
+          date: newDate,
+          slot: newSlot,
+        }
+      );
+      toast.success(response.data.message);
       setIsRescheduled(true);
+      setUpdatedAppointment(response.data.data);
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+        "Unable to reschedule appointment."
+      );
+    }finally{
       setLoading(false);
-    }, 1000);
+    }
   };
 
   // Guard Clause: Redirection handler if page is accessed directly without state
@@ -74,7 +95,7 @@ export default function RescheduleAppointment() {
           </h2>
           <p className="text-sm text-gray-500">
             Your appointment with{" "}
-            <span className="font-semibold">{appointment.doctorName}</span> has
+            <span className="font-semibold">{updatedAppointment.doctorName}</span> has
             been changed.
           </p>
 
@@ -82,8 +103,8 @@ export default function RescheduleAppointment() {
             <div className="text-gray-500 text-xs uppercase font-semibold">
               Your New Window
             </div>
-            <div className="font-bold text-gray-900">{newDate}</div>
-            <div className="font-semibold text-blue-600">{newSlot}</div>
+            <div className="font-bold text-gray-900">{updatedAppointment.date}</div>
+            <div className="font-semibold text-blue-600">{updatedAppointment.slot}</div>
           </div>
 
           <div className="pt-4">
@@ -119,7 +140,7 @@ export default function RescheduleAppointment() {
           <p className="text-gray-700 font-medium">
             {appointment.doctorName} — {appointment.date} at{" "}
             <span className="text-amber-900 font-semibold">
-              {appointment.time}
+              {appointment.slot}
             </span>
           </p>
         </div>
@@ -156,13 +177,13 @@ export default function RescheduleAppointment() {
                     className={`py-2 px-3 rounded-xl text-sm font-medium border transition ${
                       newSlot === slot
                         ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                        : slot === appointment.time &&
+                        : slot === appointment.slot &&
                             newDate === appointment.date
                           ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed line-through"
                           : "bg-white text-gray-700 border-gray-200 hover:border-blue-400"
                     }`}
                     disabled={
-                      slot === appointment.time && newDate === appointment.date
+                      slot === appointment.slot && newDate === appointment.date
                     }
                   >
                     {slot}
