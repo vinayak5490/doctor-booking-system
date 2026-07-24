@@ -116,7 +116,7 @@ export default function AppointmentLookup() {
                 <div className="grid grid-cols-2 gap-3 pt-2 border-t">
                   <button
                     onClick={() =>
-                      navigate("/reshedule-appointment", {
+                      navigate("/reschedule-appointment", {
                         state: { appointment: searchResult },
                       })
                     }

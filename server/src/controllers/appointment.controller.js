@@ -62,7 +62,7 @@ export const getAllAppointments = async(req, res)=>{
 
 export const lookupAppointment = async(req, res)=>{
     try {
-        console.log("Incoming query:", req.query.query)
+        // console.log("Incoming query:", req.query.query)
         const { query } = req.query;
         if(!query){
             return res.status(400).json({
@@ -145,22 +145,61 @@ export const rescheduleAppointment = async (req, res)=>{
     try {
         const { data, slot } = req.body;
 
-        //Conflict validation logic
-        const conflict = await Appointment.findOne({date, slot, status: {$ne: "Cancelled"}});
-        if(conflict){
-            return res.status(400).json({success: false, message: "Target slot is unavailable."});
+        if(!data || !slot){
+            return res.status(400).json({
+                success: false,
+                message: "Date and slot are required."
+            })
         }
 
-        const updatedRecord = await Appointment.findOneAndUpdate(
-            {bookingId: req.params.bookingId},
-            {date, slot, status: "Pending"},
-            {new: true}
-        );
-        if(!updatedRecord){
-            return res.status(404).json({success: false, message: "Active record identifier missing."});
+        const appointment = await Appointment.findOne({
+            bookingId: req.params.bookingId
+        });
+
+        if(!appointment){
+            return res.status(404).json({
+                success: false,
+                message: "Appointment not found."
+            });
         }
-        res.status(200).json({success: true, message: "Rescheduled successfully.", data: updatedRecord})
+
+        if(appointment.status === "Cancelled"){
+            return res.status(400).json({
+                success: false,
+                message: "Cancelled appointments cannot be rescheduled."
+            });
+        }
+
+        const conflict = await Appointment.findOne({
+            date,
+            slot,
+            status: { $ne : "Cancelled"},
+            _id : { $ne: appointment._id}
+        });
+
+        if(conflict){
+            return res.status(400).json({
+                success: false,
+                message: "Target slot is unavailable."
+            });
+        }
+
+        appointment.date = date;
+        appointment.slot = slot;
+        appointment.status = "Pending";
+
+        await appointment.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Reschedule successfully.",
+            data: appointment
+        });
     } catch (error) {
-        res.status(500).json({success: false, message: error.message});
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
     }
 }
+        
