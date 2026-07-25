@@ -39,7 +39,7 @@ function App() {
         <Route path="/book-appointment" element={<BookAppointment />} />
         <Route path="/booking-success" element={<BookingSucess />} />
         <Route path="/appointment-lookup" element={<AppointmentLookup />} />
-        <Route path="/cancel-booking" element={<CancelBooking />} />
+        <Route path="/cancel-appointment" element={<CancelBooking />} />
         <Route
           path="/reschedule-appointment"
           element={<RescheduleAppointment />}

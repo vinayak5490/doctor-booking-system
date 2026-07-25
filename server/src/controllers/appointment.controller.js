@@ -202,4 +202,54 @@ export const rescheduleAppointment = async (req, res)=>{
         });
     }
 }
+
+// @desc    Cancel Appointment
+// @route   PUT /api/appointments/cancel/:bookingId
+// @access  Public
+
+export const cancelAppointment = async (req, res) =>{
+    try {
+        const { bookingId } = req.params;
+        // const { reason } = req.body;
+
+        const appointment = await Appointment.findOne({ bookingId });
+
+        if(!appointment){
+            return res.status(404).json({
+                success: false,
+                message: "Appointment not found."
+            });
+        }
+
+        if (appointment.status === "Cancelled") {
+          return res.status(400).json({
+            success: false,
+            message: "Appointment is already cancelled.",
+          });
+        }
+
+        if (appointment.status === "Completed") {
+          return res.status(400).json({
+            success: false,
+            message: "Completed appointments cannot be cancelled.",
+          });
+        }
+
+        appointment.status = "Cancelled";
         
+        await appointment.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Appointment cancelled successfully.",
+            data: appointment
+        });
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            success: false,
+            message: "Server Error"
+        })
+    }
+}

@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 export default function CancelAppointment() {
   const location = useLocation();
@@ -12,15 +14,24 @@ export default function CancelAppointment() {
   const [isCancelled, setIsCancelled] = useState(false);
   const [reason, setReason] = useState("");
 
-  const handleCancelSubmit = (e) => {
+  const handleCancelSubmit = async(e) => {
     e.preventDefault();
     setLoading(true);
 
-    // Mock API call to delete/cancel the appointment
-    setTimeout(() => {
+    try {
+      const response = await axios.put(
+        `/api/appointments/cancel/${appointment.bookingId}`
+      );
+      toast.success(response.data.message);
       setIsCancelled(true);
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+        "Unable to cancel appointment."
+      );
+    } finally{
       setLoading(false);
-    }, 1000);
+    }
   };
 
   // Guard clause: If there is no appointment state, tell them to search first
@@ -60,7 +71,7 @@ export default function CancelAppointment() {
           </h2>
           <p className="text-sm text-gray-500">
             Your appointment with{" "}
-            <span className="font-semibold">{appointment.doctorName}</span> has
+            <span className="font-semibold">{appointment.doctor}</span> has
             been successfully cancelled. A confirmation message has been sent.
           </p>
           <div className="pt-4">
@@ -94,7 +105,7 @@ export default function CancelAppointment() {
           <div className="flex justify-between">
             <span className="text-gray-500">Doctor:</span>
             <span className="font-semibold text-gray-900">
-              {appointment.doctorName}
+              {appointment.doctor}
             </span>
           </div>
           <div className="flex justify-between">
@@ -106,7 +117,7 @@ export default function CancelAppointment() {
           <div className="flex justify-between">
             <span className="text-gray-500">Date & Time:</span>
             <span className="font-medium text-blue-600">
-              {appointment.date} at {appointment.time}
+              {appointment.slot} at {appointment.time}
             </span>
           </div>
         </div>
