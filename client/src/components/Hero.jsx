@@ -20,13 +20,21 @@ export default function Hero() {
             standard safely from your home or clinic visits.
           </p>
           <div className="flex flex-wrap gap-4">
-            <button className="bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-blue-700 shadow-md hover:shadow-lg transition"
-                onClick = {() => navigate("/book-appointment")}>
+            <button
+              className="bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-blue-700 shadow-md hover:shadow-lg transition"
+              onClick={() => navigate("/book-appointment")}
+            >
               Book Appointment
             </button>
-            <button className="bg-white text-gray-700 border border-gray-300 px-8 py-3 rounded-xl font-semibold hover:bg-gray-50 transition">
+            {/* <button className="bg-white text-gray-700 border border-gray-300 px-8 py-3 rounded-xl font-semibold hover:bg-gray-50 transition">
               Explore Services
-            </button>
+            </button> */}
+            <a
+              href="#services"
+              className="bg-white text-gray-700 border border-gray-300 px-8 py-3 rounded-xl font-semibold hover:bg-gray-50 transition"
+            >
+              Explore Services
+            </a>
           </div>
         </div>
 
