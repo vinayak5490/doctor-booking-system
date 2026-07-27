@@ -1,4 +1,6 @@
 import React from "react";
+import clinicImage from "../assets/images/clinic.jpg"
+
 
 export default function WhyUs() {
   const points = [
@@ -41,8 +43,12 @@ export default function WhyUs() {
             ))}
           </div>
         </div>
-        <div className="h-80 bg-gradient-to-br from-indigo-50 to-blue-100 rounded-2xl flex items-center justify-center text-gray-400">
-          [Clinic Feature Visual]
+        <div>
+          <img
+            src={clinicImage}
+            alt="doctorimage"
+            className="h-80 bg-gradient-to-br from-indigo-50 to-blue-100 rounded-2xl flex items-center justify-center text-gray-400"
+          />
         </div>
       </div>
     </section>
