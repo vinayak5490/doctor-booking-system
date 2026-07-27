@@ -4,15 +4,22 @@ import authRoutes from "./routes/auth.routes.js";
 import appointmentRoutes from "./routes/appointment.routes.js";
 // import adminRoutes from "./routes/admin.routes.js"; //New
 import doctorRoutes from "./routes/doctor.routes.js"; //New
+import cookieParser from "cookie-parser";
 
 const app = express();
 
-//Set up cross-origin sharing rules
-app.use(cors());
+// CORS configuration must allow credentials for HttpOnly cookies to pass through
+app.use(
+  cors({
+    origin: "http://localhost:5173", // Your React App URL
+    credentials: true, // Essential for passing HttpOnly cookies
+  }),
+);
 
 //body parsing middleware
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
+app.use(cookieParser()); // Enable cookie parsing
 
 //Routing mounts
 app.use("/api/auth", authRoutes);

@@ -20,7 +20,7 @@ export default function Login() {
         setTimeout(() => {
             if(credentials.email === "admin@docbook.com" && credentials.password === "admin123"){
                 localStorage.setItem("adminToken", "mock-jwt-string");
-                navigate("/admmin/dashboard");
+                navigate("/admin/dashboard");
             }else{
                 setError("Invalid administrative email or security password");
             }
