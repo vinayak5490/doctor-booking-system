@@ -1,11 +1,16 @@
 import React from "react";
+import doctorImage from "../assets/images/doctor.jpg";
 
 export default function About() {
   return (
     <section id="about" className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-12 items-center">
-        <div className="h-96 bg-gray-100 rounded-2xl overflow-hidden flex items-center justify-center text-gray-400 shadow-inner">
-          [Doctor Portrait]
+        <div>
+          <img
+            src={doctorImage}
+            alt="doctorimage"
+            className="h-96  bg-gray-100 rounded-2xl overflow-hidden flex items-center justify-center text-gray-400 shadow-inner"
+          />
         </div>
         <div className="space-y-6">
           <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">
