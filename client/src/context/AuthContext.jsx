@@ -3,7 +3,7 @@ import { Children } from 'react';
 
 const AuthContext = createContext();
 
-export const AuthProvider = ({ Children }) =>{
+export const AuthProvider = ({ children }) =>{
     const [admin, setAdmin] = useState(null);
     const [loading, setLoading] = useState(true);
 
