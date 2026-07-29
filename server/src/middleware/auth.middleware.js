@@ -25,6 +25,7 @@ export const protectAdmin = async(req, res, next) =>{
                 message: "Admin profile not found.",
             });
         }
+        next();
     } catch (error) {
         console.error("Auth Error:", error.message);
         return res.status(401).json({

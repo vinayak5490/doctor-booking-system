@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext';
 
 export default function Login() {
     const navigate = useNavigate();
+    const { login } = useAuth();
     const [credentials, setCredentials] = useState({email: "", password: ""});
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
@@ -12,20 +14,22 @@ export default function Login() {
         if(error) setError("");
     };
 
-    const handleLoginSubmit = (e) => {
+    const handleLoginSubmit = async(e) => {
         e.preventDefault();
         setLoading(true);
 
-        //Mock Authentication flow (ready for real API hook up later)
-        setTimeout(() => {
-            if(credentials.email === "admin@docbook.com" && credentials.password === "admin123"){
-                localStorage.setItem("adminToken", "mock-jwt-string");
-                navigate("/admin/dashboard");
-            }else{
-                setError("Invalid administrative email or security password");
-            }
-            setLoading(false);
-        }, 800);
+       try {
+        const data = await login(credentials.email, credentials.password);
+        if(data.success){
+          navigate("admin/dashboard");
+        }else{
+          setError(data.message || "Invalid administrative email or security password");
+        }
+       } catch (error) {
+        setError("unable to connect to authentication server. Please check your network.")
+       }finally{
+        setLoading(false);
+       }
     };
   return (
     <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4 sm:px-6 lg:px-8 font-sans">

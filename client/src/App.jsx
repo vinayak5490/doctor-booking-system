@@ -22,16 +22,17 @@ import Patients from "./admin/pages/Patients";
 import AdminDoctorProfile from "./admin/pages/AdminDoctorProfile";
 import Settings from "./admin/pages/Settings";
 
+//Guards
+import ProtectAdminRoute from "./admin/components/ProtectAdminRoute.jsx";
+import PublicAdminRoute from "./admin/components/PublicAdminRoute.jsx";
+
 //react-toaster
 import { Toaster } from "react-hot-toast";
 
 function App() {
   return (
     <>
-      <Toaster 
-      position="top-right"
-      reverseOrder={false}
-       />
+      <Toaster position="top-right" reverseOrder={false} />
       <Routes>
         {/* Patient Routes */}
         <Route path="/" element={<Home />} />
@@ -46,15 +47,19 @@ function App() {
         />
 
         {/* Admin Routes - Bound with Shared Admin Layout */}
-        <Route path="/admin/login" element={<Login />} />
+        <Route element={<PublicAdminRoute />}>
+          <Route path="/admin/login" element={<Login />} />
+        </Route>
 
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="appointments" element={<Appointments />} />
-          <Route path="calendar" element={<Calendar />} />
-          <Route path="patients" element={<Patients />} />
-          <Route path="profile" element={<AdminDoctorProfile />} />
-          <Route path="settings" element={<Settings />} />
+        <Route element={<ProtectAdminRoute />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="appointments" element={<Appointments />} />
+            <Route path="calendar" element={<Calendar />} />
+            <Route path="patients" element={<Patients />} />
+            <Route path="profile" element={<AdminDoctorProfile />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
         </Route>
       </Routes>
     </>
