@@ -1,75 +1,82 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from 'react'
 
 export default function Appointments() {
-  // Global Mock Database Registry State
-  const [appointmentsList, setAppointmentsList] = useState([
-    {
-      id: "APT-1021",
-      name: "John Doe",
-      phone: "9876543210",
-      date: "2026-07-16",
-      time: "10:30 AM",
-      status: "Confirmed",
-    },
-    {
-      id: "APT-1022",
-      name: "Rahul Sharma",
-      phone: "9123456789",
-      date: "2026-07-16",
-      time: "11:00 AM",
-      status: "Pending",
-    },
-    {
-      id: "APT-1023",
-      name: "Priya Rao",
-      phone: "9812345670",
-      date: "2026-07-17",
-      time: "12:30 PM",
-      status: "Confirmed",
-    },
-    {
-      id: "APT-1024",
-      name: "Amit Verma",
-      phone: "9711223344",
-      date: "2026-07-18",
-      time: "04:30 PM",
-      status: "Completed",
-    },
-    {
-      id: "APT-1025",
-      name: "Sneha Patel",
-      phone: "9655443322",
-      date: "2026-07-19",
-      time: "02:00 PM",
-      status: "Cancelled",
-    },
-  ]);
+  const [appointmentsList, setAppointmentsList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
 
-  // In-line Operational Status Modifier Action Handlers
-  const handleStatusUpdate = (id, newStatus) => {
-    setAppointmentsList((prev) =>
-      prev.map((apt) => (apt.id === id ? { ...apt, status: newStatus } : apt)),
-    );
+  // Fetch appointments from the Express API
+  const fetchAppointments = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      //Build query parameters based on state
+      const params = new URLSearchParams();
+      if (selectedStatusFilter !== "All") {
+        params.append("status", selectedStatusFilter);
+      }
+      if (searchTerm.trim() !== "") {
+        params.append("search", searchTerm.trim());
+      }
+
+      const response = await fetch(`/api/appointments?${params.toString()}`);
+      const results = await response.json();
+
+      if (!response.ok) {
+        throw new Error(results.message || "Failed to fetch appointments");
+      }
+
+      //Backend returns records inside 'result.date' array based on controller logic
+      setAppointmentsList(results.date || []);
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [searchTerm, selectedStatusFilter]);
+
+  // Refresh when filters or search change
+  useEffect(() => {
+    //Debounce search slightly to avoid hitting the API on every keystroke
+    const timer = setTimeout(() => {
+      fetchAppointments();
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [fetchAppointments]);
+
+  //Handle updating status via API
+  const handleStatusUpdate = async (mongoId, newStatus) => {
+    try {
+      const response = await fetch(`/api/appointments/${mongoId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        alert(result.message || "Failed to update status");
+        return;
+      }
+
+      //optimistically/logically sync state with response data
+      setAppointmentsList((prev) =>
+        prev.map((apt) =>
+          apt._id == mongoId ? { ...apt, status: newStatus } : apt,
+        ),
+      );
+    } catch (error) {
+      alert(`Error: ${error.message}`);
+    }
   };
 
-  // Process pipelines for dynamic visual calculations
-  const filteredAppointments = appointmentsList.filter((apt) => {
-    const matchesSearch =
-      apt.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      apt.phone.includes(searchTerm) ||
-      apt.id.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesStatus =
-      selectedStatusFilter === "All" || apt.status === selectedStatusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
-
   const filterTabs = ["All", "Pending", "Confirmed", "Completed", "Cancelled"];
-
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Title Header Section */}
@@ -131,17 +138,37 @@ export default function Appointments() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm text-slate-600">
-              {filteredAppointments.length > 0 ? (
-                filteredAppointments.map((row) => (
-                  <tr key={row.id} className="hover:bg-slate-50/40 transition">
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan="5"
+                    className="py-12 text-center text-sm text-slate-400 font-medium"
+                  >
+                    Loading appointments...
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td
+                    colSpan="5"
+                    className="py-12 text-center text-sm text-red-500 font-medium"
+                  >
+                    {error}
+                  </td>
+                </tr>
+              ) : appointmentsList.length > 0 ? (
+                appointmentsList.map((row) => (
+                  <tr key={row._id} className="hover:bg-slate-50/40 transition">
                     {/* Unique Identifier column */}
                     <td className="py-4 px-6 font-mono text-xs font-bold text-slate-400">
-                      {row.id}
+                      {row.bookingId || row._id}
                     </td>
 
                     {/* Patient identity profiles column */}
                     <td className="py-4 px-4">
-                      <div className="font-bold text-slate-900">{row.name}</div>
+                      <div className="font-bold text-slate-900">
+                        {row.patientName}
+                      </div>
                       <div className="text-xs text-slate-400 font-medium">
                         {row.phone}
                       </div>
@@ -150,9 +177,13 @@ export default function Appointments() {
                     {/* Date Metrics configurations */}
                     <td className="py-4 px-4">
                       <div className="font-semibold text-slate-700">
-                        {row.date}
+                        {row.date
+                          ? new Date(row.date).toLocaleDateString()
+                          : "-"}
                       </div>
-                      <div className="text-xs text-slate-400">{row.time}</div>
+                      <div className="text-xs text-slate-400">
+                        {row.slot || row.time}
+                      </div>
                     </td>
 
                     {/* Dynamic colored status blocks */}
@@ -178,7 +209,7 @@ export default function Appointments() {
                         <select
                           value={row.status}
                           onChange={(e) =>
-                            handleStatusUpdate(row.id, e.target.value)
+                            handleStatusUpdate(row._id, e.target.value)
                           }
                           className="bg-slate-50 border border-slate-200 text-xs font-bold rounded-lg px-2 py-1 text-slate-700 outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition"
                         >
