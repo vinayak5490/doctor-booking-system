@@ -1,58 +1,62 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, {useState, useEffect, useCallback} from 'react'
 
 export default function Calendar() {
   const today = new Date();
-  
-  // Dynamic Month & Year Navigation State
-  const [currentYear, setCurrentYear] = useState(today.getFullYear());
-  const [currentMonth, setCurrentMonth] = useState(today.getMonth()); // 0-indexed
-  const [selectedDateStr, setSelectedDateStr] = useState(
-    today.toISOString().split("T")[0]
-  );
 
-  // Dynamic Data & API States
+  //Dynamic Month & year Navigation State
+  const [currentYear, setCurrentYear] = useState(today.getFullYear());
+  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
+  const [selectedDateStr, setSelectedDateStr] = useState(
+    today.toISOString().split("T")[0],
+  );
   const [appointmentsDb, setAppointmentsDb] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
 
   const daysOfWeek = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
-  // Helper logic to programmatically compile standard Gregorian calendar matrices
   const getDaysInMonth = (year, month) =>
-    new Date(year, month + 1, 0).getDate();
+    new Date(year, month+1, 0).getDate();
 
-  const getFirstDayOfMonth = (year, month) => {
-    // 0 represents Monday, 6 represents Sunday
+  const getFirstDayOfMonth = (year, month)=>{
     let day = new Date(year, month, 1).getDay();
     return day === 0 ? 6 : day - 1;
   };
 
-  // Fetch appointments for the selected month/year window from Express API
   const fetchMonthAppointments = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch appointments for the active month view
+      //Fetch appointments for the active month view
       const response = await fetch(
         `/api/appointments?year=${currentYear}&month=${currentMonth + 1}`
       );
       const result = await response.json();
 
-      if (!response.ok) {
+      if(!response.ok){
         throw new Error(result.message || "Failed to fetch calendar entries");
       }
 
-      // Format response array into a date-keyed dictionary map: { "YYYY-MM-DD": [apt1, apt2] }
+      //Format response array into a date-keyed dictionary map : { "yyyy-mm-dd" : [apt1, apt2]}
       const rawList = result.data || result.date || [];
-      const mappedDb = rawList.reduce((acc, item) => {
+      const mappedDb = rawList.reduce((acc, item)=>{
         const formattedKey = new Date(item.date).toISOString().split("T")[0];
-        if (!acc[formattedKey]) {
+        if(!acc[formattedKey]){
           acc[formattedKey] = [];
         }
         acc[formattedKey].push({
@@ -60,31 +64,31 @@ export default function Calendar() {
           bookingId: item.bookingId || item._id,
           name: item.patientName,
           phone: item.phone,
-          time: item.slot || item.time,
+          time: item.slot,
           status: item.status,
         });
         return acc;
       }, {});
 
       setAppointmentsDb(mappedDb);
-    } catch (err) {
-      setError(err.message);
+    } catch (error) {
+      setError(error.message);
     }finally{
       setLoading(false);
     }
   }, [currentYear, currentMonth]);
 
-  useEffect(() => {
+  useEffect(()=>{
     fetchMonthAppointments();
   }, [fetchMonthAppointments]);
 
-  // Month navigation handlers
+  //Month navigation handlers
   const handlePrevMonth = () => {
     if (currentMonth === 0) {
       setCurrentMonth(11);
       setCurrentYear((prev) => prev - 1);
     } else {
-      setCurrentMonth((prev) => prev - 1);
+      setCurrentYear((prev) => prev - 1);
     }
   };
 
@@ -104,43 +108,41 @@ export default function Calendar() {
     setSelectedDateStr(now.toISOString().split("T")[0]);
   };
 
-  // Handle live status updates directly from the agenda panel
-  const handleStatusUpdate = async (mongoId, newStatus) => {
+  //Handle live status updates directly from teh agenda panel
+  const handleStatusUpdate = async (mongoId, newStatus) =>{
     try {
-      const response = await fetch(`/api/appointments/${mongoId}/status`, {
+      const response =  await fetch(`/api/appointments/${mongoId}/status`,{
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
+        headers: {"content-Type": "application/json"},
+        body: JSON.stringify({status: newStatus}),
       });
-
       const result = await response.json();
 
-      if (!response.ok) {
+      if(!response.ok){
         alert(result.message || "Failed to update appointment status");
         return;
       }
-
-      // Optimistically update local state dictionary
-      setAppointmentsDb((prevDb) => {
-        const updatedDateList = (prevDb[selectedDateStr] || []).map((apt) =>
-          apt.id === mongoId ? { ...apt, status: newStatus } : apt
+      setAppointmentsDb((prevDb) =>{
+        const updatedDateList = (prevDb[selectedDateStr] || []).map((apt)=>
+          apt.id === mongoId ? { ...apt, status: newStatus} : apt
         );
-        return { ...prevDb, [selectedDateStr]: updatedDateList };
+        return {...prevDb, [selectedDateStr] : updatedDateList};
       });
-    } catch (err) {
-      alert(`Error updating status: ${err.message}`);
-    }
-  };
 
-  // Compile calendar grid matrix
+    } catch (error) {
+      alert(`Error updating status: ${error.message}`);
+    }
+  }
+
+  //compile calendar grid matrix
   const totalDays = getDaysInMonth(currentYear, currentMonth);
   const blankInitialSlots = getFirstDayOfMonth(currentYear, currentMonth);
 
   const calendarCells = [];
-  for (let i = 0; i < blankInitialSlots; i++) {
+  for(let i=0; i<blankInitialSlots; i++){
     calendarCells.push(null);
   }
-  for (let day = 1; day <= totalDays; day++) {
+  for(let day=1; day<=totalDays; day++){
     calendarCells.push(day);
   }
 
@@ -231,7 +233,7 @@ export default function Calendar() {
                     );
 
                   const tileDateStr = `${currentYear}-${String(
-                    currentMonth + 1
+                    currentMonth + 1,
                   ).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
                   const dayAppointments = appointmentsDb[tileDateStr] || [];
@@ -247,8 +249,8 @@ export default function Calendar() {
                         isSelected
                           ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100"
                           : isToday
-                          ? "bg-blue-50 text-blue-700 border-blue-300"
-                          : "bg-slate-50 text-slate-700 border-slate-200/60 hover:bg-slate-200/50"
+                            ? "bg-blue-50 text-blue-700 border-blue-300"
+                            : "bg-slate-50 text-slate-700 border-slate-200/60 hover:bg-slate-200/50"
                       }`}
                     >
                       <span className="flex items-center justify-between w-full">
@@ -328,10 +330,10 @@ export default function Calendar() {
                         apt.status === "Confirmed"
                           ? "bg-green-50 text-green-700 border-green-200"
                           : apt.status === "Completed"
-                          ? "bg-blue-50 text-blue-700 border-blue-200"
-                          : apt.status === "Cancelled"
-                          ? "bg-red-50 text-red-700 border-red-200"
-                          : "bg-yellow-50 text-yellow-700 border-yellow-200"
+                            ? "bg-blue-50 text-blue-700 border-blue-200"
+                            : apt.status === "Cancelled"
+                              ? "bg-red-50 text-red-700 border-red-200"
+                              : "bg-yellow-50 text-yellow-700 border-yellow-200"
                       }`}
                     >
                       <option value="Pending">Pending</option>
