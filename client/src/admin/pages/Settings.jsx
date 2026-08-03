@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 
 export default function Settings() {
-  // Centralized System Configuration State Tree
   const [settings, setSettings] = useState({
-    clinicName: "DocBook Executive Clinics",
-    supportEmail: "ops@docbook.com",
+    clinicName: "",
+    supportEmail: "",
     slotDuration: "15",
     maxBufferDays: "30",
     enableReminders: true,
@@ -12,8 +11,31 @@ export default function Settings() {
     systemStatus: "Operational",
   });
 
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [successMsg, setSuccessMsg] = useState("");
+  const [statusMsg, setStatusMsg] = useState({ type: "", text: "" });
+
+  // Fetch persisted system settings from backend
+  const fetchSettings = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch("/api/settings");
+      if (!res.ok) throw new Error("Failed to load system configurations.");
+
+      const json = await res.json();
+      if (json.data) {
+        setSettings(json.data);
+      }
+    } catch (err) {
+      setStatusMsg({ type: "error", text: err.message });
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
 
   const handleToggle = (key) => {
     setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -24,19 +46,46 @@ export default function Settings() {
     setSettings((prev) => ({ ...prev, [name]: value }));
   };
 
-  const saveConfiguration = (e) => {
+  const saveConfiguration = async (e) => {
     e.preventDefault();
     setIsSaving(true);
+    setStatusMsg({ type: "", text: "" });
 
-    // Simulate standard high-availability edge persistence delay
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(settings),
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.message || "Failed to commit system updates.");
+      }
+
+      const updatedJson = await res.json();
+      setSettings(updatedJson.data);
+
+      setStatusMsg({
+        type: "success",
+        text: "System properties synced to database cluster successfully. ✓",
+      });
+
+      setTimeout(() => setStatusMsg({ type: "", text: "" }), 4000);
+    } catch (err) {
+      setStatusMsg({ type: "error", text: err.message });
+    } finally {
       setIsSaving(false);
-      setSuccessMsg(
-        "System properties synced to database cluster successfully. ✓",
-      );
-      setTimeout(() => setSuccessMsg(""), 4000);
-    }, 900);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="py-20 text-center text-sm font-medium text-slate-400">
+        Fetching current cluster configurations...
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-4xl animate-fadeIn">
@@ -52,9 +101,15 @@ export default function Settings() {
           </p>
         </div>
 
-        {successMsg && (
-          <div className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm">
-            {successMsg}
+        {statusMsg.text && (
+          <div
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm ${
+              statusMsg.type === "success"
+                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                : "bg-red-50 text-red-700 border border-red-200"
+            }`}
+          >
+            {statusMsg.text}
           </div>
         )}
       </div>
@@ -217,7 +272,7 @@ export default function Settings() {
             <span className="text-xs text-slate-500 font-semibold tracking-wide">
               Global Platform State:{" "}
               <span className="text-slate-700 font-black">
-                {settings.systemStatus}
+                {settings.systemStatus || "Operational"}
               </span>
             </span>
           </div>
