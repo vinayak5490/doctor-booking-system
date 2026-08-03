@@ -1,5 +1,14 @@
 import express from "express";
-import { createAppointment, getAllAppointments, lookupAppointment, updateAppointmentStatus, rescheduleAppointment, cancelAppointment } from "../controllers/appointment.controller.js";
+import {
+  createAppointment,
+  getAllAppointments,
+  lookupAppointment,
+  updateAppointmentStatus,
+  rescheduleAppointment,
+  cancelAppointment,
+  getDashboardStats,
+  getTodaysAppointments,
+} from "../controllers/appointment.controller.js";
 import { protectAdmin } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
@@ -13,5 +22,7 @@ router.put("/cancel/:bookingId", cancelAppointment);
 //Firewall Protected Admin Operations
 router.get("/", protectAdmin, getAllAppointments);
 router.patch("/:id/status", protectAdmin, updateAppointmentStatus);
+router.get("/stats", getDashboardStats);
+router.get("/today", getTodaysAppointments);
 
 export default router;

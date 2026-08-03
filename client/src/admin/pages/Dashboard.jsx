@@ -1,73 +1,98 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import StatsCard from "../components/StatsCard";
 
 export default function Dashboard() {
-  // Analytical system aggregates
+  const [statsData, setStatsData] = useState({
+    todaysCount: 0,
+    upcomingCount: 0,
+    completedCount: 0,
+    cancelledCount: 0,
+  });
+
+  const [todaysSchedule, setTodaysSchedule] = useState([]);
+  const [recentAppointments, setRecentAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch Dashboard Metrics & Lists from Express API
+  const fetchDashboardData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Execute queries concurrently
+      const [statsRes, queueRes, recentRes] = await Promise.all([
+        fetch("/api/appointments/stats"),
+        fetch("/api/appointments/today"),
+        fetch("/api/appointments?limit=5"),
+      ]);
+
+      // Check if responses are ok
+      if (!statsRes.ok || !queueRes.ok || !recentRes.ok) {
+        throw new Error("Failed to load dashboard metrics");
+      }
+
+      const statsJson = await statsRes.json();
+      const queueJson = await queueRes.json();
+      const recentJson = await recentRes.json();
+
+      setStatsData(statsJson.data || statsJson);
+      setTodaysSchedule(queueJson.data || queueJson);
+      setRecentAppointments(recentJson.data || recentJson);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  // Dynamic 4-Column Metric Grid Mapping
   const stats = [
     {
       title: "Today's Appointments",
-      count: "18",
+      count: String(statsData.todaysCount ?? 0),
       icon: "🕒",
       colorClass: "bg-blue-50 text-blue-600 border border-blue-100",
     },
     {
       title: "Upcoming Bookings",
-      count: "42",
+      count: String(statsData.upcomingCount ?? 0),
       icon: "📅",
       colorClass: "bg-yellow-50 text-yellow-600 border border-yellow-100",
     },
     {
       title: "Completed Sessions",
-      count: "76",
+      count: String(statsData.completedCount ?? 0),
       icon: "✅",
       colorClass: "bg-green-50 text-green-600 border border-green-100",
     },
     {
       title: "Cancelled Requests",
-      count: "5",
+      count: String(statsData.cancelledCount ?? 0),
       icon: "❌",
       colorClass: "bg-red-50 text-red-600 border border-red-100",
     },
   ];
 
-  // Daily running tracking pipeline
-  const todaysSchedule = [
-    { time: "10:00 AM", patient: "John Doe", status: "In-Progress" },
-    { time: "11:00 AM", patient: "Rahul Sharma", status: "Waiting" },
-    { time: "12:30 PM", patient: "Priya Rao", status: "Scheduled" },
-  ];
+  if (loading) {
+    return (
+      <div className="py-20 text-center text-sm font-medium text-slate-400">
+        Loading system overview metrics...
+      </div>
+    );
+  }
 
-  // Global logging ledger records
-  const recentAppointments = [
-    {
-      id: "APT-9082",
-      patient: "Amit Verma",
-      date: "14 July 2026",
-      time: "04:30 PM",
-      status: "Completed",
-    },
-    {
-      id: "APT-9081",
-      patient: "Sneha Patel",
-      date: "14 July 2026",
-      time: "02:00 PM",
-      status: "Completed",
-    },
-    {
-      id: "APT-9080",
-      patient: "Rohan Das",
-      date: "13 July 2026",
-      time: "11:30 AM",
-      status: "Cancelled",
-    },
-    {
-      id: "APT-9079",
-      patient: "Ananya Iyer",
-      date: "13 July 2026",
-      time: "10:00 AM",
-      status: "Completed",
-    },
-  ];
+  if (error) {
+    return (
+      <div className="py-20 text-center text-sm font-medium text-red-500">
+        Error loading overview: {error}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-fadeIn">
@@ -103,37 +128,44 @@ export default function Dashboard() {
           </div>
 
           <div className="space-y-3 relative before:absolute before:inset-y-1 before:left-3 before:w-0.5 before:bg-slate-100">
-            {todaysSchedule.map((slot, index) => (
-              <div
-                key={index}
-                className="flex items-start gap-4 relative pl-1 group"
-              >
-                <div className="w-6 h-6 bg-white border-2 border-blue-600 rounded-full flex items-center justify-center shrink-0 z-10 group-hover:scale-110 transition-transform">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full" />
-                </div>
-                <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 flex-1 flex items-center justify-between">
-                  <div>
-                    <span className="text-xs font-bold text-blue-600 block">
-                      {slot.time}
-                    </span>
-                    <span className="text-sm font-bold text-slate-800">
-                      {slot.patient}
+            {todaysSchedule.length > 0 ? (
+              todaysSchedule.map((slot, index) => (
+                <div
+                  key={slot._id || index}
+                  className="flex items-start gap-4 relative pl-1 group"
+                >
+                  <div className="w-6 h-6 bg-white border-2 border-blue-600 rounded-full flex items-center justify-center shrink-0 z-10 group-hover:scale-110 transition-transform">
+                    <div className="w-2 h-2 bg-blue-600 rounded-full" />
+                  </div>
+                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 flex-1 flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-blue-600 block">
+                        {slot.slot || slot.time}
+                      </span>
+                      <span className="text-sm font-bold text-slate-800">
+                        {slot.patientName || slot.patient}
+                      </span>
+                    </div>
+                    <span
+                      className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                        slot.status === "In-Progress"
+                          ? "bg-blue-100 text-blue-700"
+                          : slot.status === "Waiting" ||
+                              slot.status === "Pending"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-slate-200 text-slate-600"
+                      }`}
+                    >
+                      {slot.status || "Scheduled"}
                     </span>
                   </div>
-                  <span
-                    className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
-                      slot.status === "In-Progress"
-                        ? "bg-blue-100 text-blue-700"
-                        : slot.status === "Waiting"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-slate-200 text-slate-600"
-                    }`}
-                  >
-                    {slot.status}
-                  </span>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-xs text-slate-400 py-6 text-center">
+                No active appointments queued for today.
+              </p>
+            )}
           </div>
         </div>
 
@@ -159,33 +191,53 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm text-slate-600">
-                {recentAppointments.map((row) => (
-                  <tr key={row.id} className="hover:bg-slate-50/50 transition">
-                    <td className="py-3.5 pl-2 font-mono text-xs font-bold text-slate-400">
-                      {row.id}
-                    </td>
-                    <td className="py-3.5 font-bold text-slate-800">
-                      {row.patient}
-                    </td>
-                    <td className="py-3.5">
-                      <span className="font-medium text-slate-700 block">
-                        {row.date}
-                      </span>
-                      <span className="text-xs text-slate-400">{row.time}</span>
-                    </td>
-                    <td className="py-3.5 pr-2 text-right">
-                      <span
-                        className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-                          row.status === "Completed"
-                            ? "bg-green-50 text-green-700 border border-green-100"
-                            : "bg-red-50 text-red-700 border border-red-100"
-                        }`}
-                      >
-                        {row.status}
-                      </span>
+                {recentAppointments.length > 0 ? (
+                  recentAppointments.map((row) => (
+                    <tr
+                      key={row._id || row.id}
+                      className="hover:bg-slate-50/50 transition"
+                    >
+                      <td className="py-3.5 pl-2 font-mono text-xs font-bold text-slate-400">
+                        {row.bookingId || row._id || row.id}
+                      </td>
+                      <td className="py-3.5 font-bold text-slate-800">
+                        {row.patientName || row.patient}
+                      </td>
+                      <td className="py-3.5">
+                        <span className="font-medium text-slate-700 block">
+                          {row.date
+                            ? new Date(row.date).toLocaleDateString()
+                            : "N/A"}
+                        </span>
+                        <span className="text-xs text-slate-400">
+                          {row.slot || row.time}
+                        </span>
+                      </td>
+                      <td className="py-3.5 pr-2 text-right">
+                        <span
+                          className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                            row.status === "Completed"
+                              ? "bg-green-50 text-green-700 border border-green-100"
+                              : row.status === "Cancelled"
+                                ? "bg-red-50 text-red-700 border border-red-100"
+                                : "bg-yellow-50 text-yellow-700 border border-yellow-100"
+                          }`}
+                        >
+                          {row.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan="4"
+                      className="py-8 text-center text-xs text-slate-400 font-medium"
+                    >
+                      No recent appointment logs recorded.
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

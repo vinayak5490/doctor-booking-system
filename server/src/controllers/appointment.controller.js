@@ -253,3 +253,74 @@ export const cancelAppointment = async (req, res) =>{
         })
     }
 }
+// Get Dashboard Aggregated Analytics
+export const getDashboardStats = async (req, res) => {
+  try {
+    // 1. Calculate Start and End of Today in UTC
+    const todayStart = new Date();
+    todayStart.setUTCHours(0, 0, 0, 0);
+
+    const todayEnd = new Date();
+    todayEnd.setUTCHours(23, 59, 59, 999);
+
+    // 2. Fetch counts concurrently
+    const [todaysCount, upcomingCount, completedCount, cancelledCount] =
+      await Promise.all([
+        // Today's appointments (Date object OR String match)
+        Appointment.countDocuments({
+          $or: [
+            { date: { $gte: todayStart, $lte: todayEnd } },
+            { date: { $gte: todayStart.toISOString(), $lte: todayEnd.toISOString() } },
+          ],
+        }),
+
+        // Upcoming bookings (strictly after todayEnd, excluding cancelled)
+        Appointment.countDocuments({
+          $or: [
+            { date: { $gt: todayEnd } },
+            { date: { $gt: todayEnd.toISOString() } },
+          ],
+          status: { $ne: 'Cancelled' },
+        }),
+
+        // Completed sessions
+        Appointment.countDocuments({ status: 'Completed' }),
+
+        // Cancelled requests
+        Appointment.countDocuments({ status: 'Cancelled' }),
+      ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        todaysCount,
+        upcomingCount,
+        completedCount,
+        cancelledCount,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+// Get Today's Appointments Queue
+export const getTodaysAppointments = async (req, res) => {
+  try {
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const appointments = await Appointment.find({
+      date: { $gte: startOfDay, $lte: endOfDay }
+    }).sort({ slot: 1 });
+
+    res.status(200).json({
+      success: true,
+      data: appointments
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
