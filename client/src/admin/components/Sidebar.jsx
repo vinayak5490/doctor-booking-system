@@ -1,8 +1,11 @@
 import React from 'react'
 import { NavLink, useNavigate} from "react-router-dom";
+import toast from "react-hot-toast";
+import { useAuth } from '../../context/AuthContext';
 
 export default function Sidebar() {
     const navigate = useNavigate();
+    const { logout } = useAuth();
 
     const menuItems = [
       { name: "Dashboard", path: "/admin/dashboard", icon: "📊" },
@@ -13,9 +16,16 @@ export default function Sidebar() {
       { name: "Settings", path: "/admin/settings", icon: "⚙️" },
     ];
 
-    const handleLogout = () => {
-        localStorage.removeItem("adminToken");
-        navigate("/admin/login");
+    const handleLogout = async() => {
+        try {
+            await logout();
+            toast.success("Logged out successfully!");
+            navigate("/admin/login", {replace: true});
+          
+        } catch (error) {
+          toast.error(`Logout failed: ${error.message}`);
+        }
+        
     }
   return (
     <div className="w-64 bg-slate-900 text-slate-300 flex flex-col h-full shrink-0 border-r border-slate-800">
