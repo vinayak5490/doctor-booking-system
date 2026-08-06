@@ -1,7 +1,26 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
+
+const defaultDoctorProfile = {
+  name: "Dr. Arjun Mehta",
+  qualification: "MBBS, MD",
+  specialization: "General Physician",
+  experience: 15,
+  consultationFee: 700,
+  languages: ["English", "Hindi"],
+  workingDays: [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ],
+  startTime: "10:00",
+  endTime: "20:00",
+};
 
 export default function BookAppointment() {
   const navigate = useNavigate();
@@ -10,6 +29,7 @@ export default function BookAppointment() {
   // Step-by-step active state tracking
   const [selectedDate, setSelectedDate] = useState(today);
   const [selectedSlot, setSelectedSlot] = useState("");
+  const [doctor, setDoctor] = useState(defaultDoctorProfile);
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
@@ -29,40 +49,62 @@ export default function BookAppointment() {
     "02:00 PM",
   ];
 
+  useEffect(() => {
+    const loadDoctorProfile = async () => {
+      try {
+        const response = await fetch("/api/doctor", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          setDoctor({
+            ...defaultDoctorProfile,
+            ...result.data,
+            languages: Array.isArray(result.data.languages)
+              ? result.data.languages
+              : [result.data.languages || defaultDoctorProfile.languages[0]],
+          });
+        }
+      } catch (error) {
+        console.error("Unable to load doctor profile for booking page", error);
+      }
+    };
+
+    loadDoctorProfile();
+  }, []);
+
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleBookingSubmit = async(e) => {
+  const handleBookingSubmit = async (e) => {
     e.preventDefault();
-    try{
-    const appointmentData = {
-      patientName: formData.fullName,
-      phone: formData.phone,
-      email: formData.email,
-      age: Number(formData.age),
-      gender: formData.gender,
-      symptoms: formData.symptoms,
-      date: selectedDate,
-      slot: selectedSlot
+    try {
+      const appointmentData = {
+        patientName: formData.fullName,
+        phone: formData.phone,
+        email: formData.email,
+        age: Number(formData.age),
+        gender: formData.gender,
+        symptoms: formData.symptoms,
+        date: selectedDate,
+        slot: selectedSlot,
+      };
+
+      const response = await axios.post("/api/appointments", appointmentData);
+
+      toast.success(response.data.message);
+      navigate("/booking-success", {
+        state: { date: selectedDate, time: selectedSlot, ...formData },
+      });
+    } catch (error) {
+      console.error(error);
+      toast.error(
+        error.response?.data?.message || "Unable to book appointment.",
+      );
     }
-
-    const response = await axios.post(
-      "/api/appointments",
-      appointmentData
-    )
-
-    toast.success(response.data.message);
-    navigate("/booking-success", {
-      state: { date: selectedDate, time: selectedSlot, ...formData },
-    });
-  }catch(error){
-    console.error(error);
-    toast.error(
-      error.response?.data?.message ||
-      "Unable to book appointment."
-    );
-  }
   };
 
   return (
@@ -75,11 +117,9 @@ export default function BookAppointment() {
               👨‍⚕️
             </div>
             <div>
-              <h3 className="font-bold text-lg text-gray-900">
-                Dr. Arjun Mehta
-              </h3>
+              <h3 className="font-bold text-lg text-gray-900">{doctor.name}</h3>
               <p className="text-xs text-gray-500">
-                MBBS, MD • General Physician
+                {doctor.qualification} • {doctor.specialization}
               </p>
             </div>
           </div>
@@ -87,21 +127,27 @@ export default function BookAppointment() {
             <div className="flex justify-between">
               <span>⭐ Rating:</span>
               <span className="font-semibold text-gray-900">
-                4.9 (15 Yrs Exp)
+                4.9 ({doctor.experience} Yrs Exp)
               </span>
             </div>
             <div className="flex justify-between">
               <span>💵 Consultation:</span>
-              <span className="font-semibold text-blue-600">₹700</span>
+              <span className="font-semibold text-blue-600">
+                ₹{doctor.consultationFee}
+              </span>
             </div>
             <div className="flex justify-between">
               <span>🗣️ Languages:</span>
-              <span className="font-medium text-gray-900">English, Hindi</span>
+              <span className="font-medium text-gray-900">
+                {doctor.languages.join(", ")}
+              </span>
             </div>
             <div className="flex justify-between">
               <span>📅 Schedule:</span>
               <span className="font-medium text-gray-900">
-                Mon-Sat (10AM - 8PM)
+                {doctor.workingDays?.length
+                  ? `${doctor.workingDays[0]}-${doctor.workingDays[doctor.workingDays.length - 1]} (${doctor.startTime} - ${doctor.endTime})`
+                  : "Mon-Sat (10AM - 8PM)"}
               </span>
             </div>
           </div>

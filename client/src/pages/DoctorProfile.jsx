@@ -139,30 +139,6 @@ export default function DoctorProfile() {
                   </p>
                 )}
               </div>
-
-              <div className="flex gap-2 justify-center sm:justify-end">
-                {isEditing ? (
-                  <button
-                    onClick={handleSaveProfile}
-                    className="bg-emerald-600 text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-emerald-700 transition shadow-md"
-                  >
-                    💾 Save Changes
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="bg-gray-100 text-gray-700 font-semibold px-4 py-2.5 rounded-xl hover:bg-gray-200 transition"
-                  >
-                    ✏️ Edit Profile
-                  </button>
-                )}
-                <button
-                  onClick={() => navigate("/admin/appointments")}
-                  className="bg-blue-600 text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-blue-700 transition shadow-md whitespace-nowrap"
-                >
-                  Appointments
-                </button>
-              </div>
             </div>
 
             <div className="flex flex-wrap justify-center sm:justify-start gap-x-6 gap-y-1 text-sm text-gray-500 pt-2 border-t border-gray-100">
