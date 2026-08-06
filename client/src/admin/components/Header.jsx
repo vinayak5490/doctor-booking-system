@@ -1,6 +1,42 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+
+const defaultDoctorProfile = {
+  name: "Dr. Arjun Mehta",
+};
 
 export default function Header() {
+  const [doctor, setDoctor] = useState(defaultDoctorProfile);
+
+  useEffect(() => {
+    const loadDoctorProfile = async () => {
+      try {
+        const response = await fetch("/api/doctor", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          setDoctor({
+            name: result.data.name || defaultDoctorProfile.name,
+          });
+        }
+      } catch (error) {
+        console.error("Unable to load doctor profile for header", error);
+      }
+    };
+
+    loadDoctorProfile();
+  }, []);
+
+  const initials = doctor.name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+
   return (
     <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 shadow-sm z-10">
       {/* Administrative Global Core Search System */}
@@ -32,14 +68,14 @@ export default function Header() {
         <div className="flex items-center gap-3">
           <div className="text-right hidden md:block">
             <div className="text-sm font-bold text-slate-900 leading-none">
-              Dr. Arjun Mehta
+              {doctor.name}
             </div>
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
               Chief Administrator
             </span>
           </div>
           <div className="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center font-bold text-blue-600 border border-blue-200 shadow-inner">
-            AM
+            {initials}
           </div>
         </div>
       </div>

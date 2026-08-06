@@ -1,29 +1,98 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+
+const defaultProfileData = {
+  name: "Dr. Arjun Mehta",
+  qualification: "MBBS, MD - General Medicine",
+  consultationFee: 700,
+  experience: 15,
+  languages: "English, Hindi",
+  clinicAddress: "DocBook Executive Clinics, Sector 62, Noida, UP - 201301",
+  about:
+    "Senior General Physician specializing in chronic disease care, comprehensive preventive medicine diagnostics, and targeted lifestyle modifications tracking metrics.",
+  workingDays: [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ],
+  startTime: "10:00",
+  endTime: "20:00",
+};
+
+const normalizeTimeValue = (value) => {
+  if (!value) return "10:00";
+
+  if (value.includes("AM") || value.includes("PM")) {
+    const [timePart, modifier] = value.split(" ");
+    const [hours, minutes] = timePart.split(":");
+    let hour = Number(hours);
+
+    if (modifier === "PM" && hour < 12) {
+      hour += 12;
+    }
+
+    if (modifier === "AM" && hour === 12) {
+      hour = 0;
+    }
+
+    return `${String(hour).padStart(2, "0")}:${minutes}`;
+  }
+
+  return value;
+};
+
+const hydrateProfileData = (doctorData) => ({
+  name: doctorData?.name || defaultProfileData.name,
+  qualification: doctorData?.qualification || defaultProfileData.qualification,
+  consultationFee:
+    doctorData?.consultationFee ?? defaultProfileData.consultationFee,
+  experience: doctorData?.experience ?? defaultProfileData.experience,
+  languages: Array.isArray(doctorData?.languages)
+    ? doctorData.languages.join(", ")
+    : doctorData?.languages || defaultProfileData.languages,
+  clinicAddress:
+    doctorData?.clinicAddress ||
+    doctorData?.clinicAdress ||
+    defaultProfileData.clinicAddress,
+  about: doctorData?.about || defaultProfileData.about,
+  workingDays:
+    Array.isArray(doctorData?.workingDays) && doctorData.workingDays.length
+      ? doctorData.workingDays
+      : defaultProfileData.workingDays,
+  startTime: normalizeTimeValue(
+    doctorData?.startTime || defaultProfileData.startTime,
+  ),
+  endTime: normalizeTimeValue(
+    doctorData?.endTime || defaultProfileData.endTime,
+  ),
+});
 
 export default function AdminDoctorProfile() {
-  // Central core profile form configuration state
-  const [profileData, setProfileData] = useState({
-    name: "Dr. Arjun Mehta",
-    qualification: "MBBS, MD - General Medicine",
-    fee: "700",
-    experience: "15",
-    languages: "English, Hindi",
-    clinicAddress: "DocBook Executive Clinics, Sector 62, Noida, UP - 201301",
-    about:
-      "Senior General Physician specializing in chronic disease care, comprehensive preventive medicine diagnostics, and targeted lifestyle modifications tracking metrics.",
-    workingDays: [
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ],
-    startTime: "10:00",
-    endTime: "20:00",
-  });
-
+  const [profileData, setProfileData] = useState(defaultProfileData);
   const [saveStatus, setSaveStatus] = useState("");
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const response = await fetch("/api/doctor", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        });
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          setProfileData(hydrateProfileData(result.data));
+        }
+      } catch (error) {
+        console.error("Unable to load doctor profile", error);
+      }
+    };
+
+    loadProfile();
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -39,15 +108,46 @@ export default function AdminDoctorProfile() {
     });
   };
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
     setSaveStatus("Saving changes...");
 
-    // Simulate API persistence framework hook
-    setTimeout(() => {
-      setSaveStatus("Profile configuration updated successfully! ✓");
-      setTimeout(() => setSaveStatus(""), 3000);
-    }, 800);
+    try {
+      const payload = {
+        name: profileData.name,
+        qualification: profileData.qualification,
+        specialization: profileData.specialization || "General Physician",
+        consultationFee: Number(profileData.consultationFee),
+        experience: Number(profileData.experience),
+        languages: profileData.languages
+          .split(",")
+          .map((language) => language.trim())
+          .filter(Boolean),
+        clinicAddress: profileData.clinicAddress,
+        about: profileData.about,
+        workingDays: profileData.workingDays,
+        startTime: normalizeTimeValue(profileData.startTime),
+        endTime: normalizeTimeValue(profileData.endTime),
+      };
+
+      const response = await fetch("/api/doctor", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        setSaveStatus("Profile configuration updated successfully! ✓");
+        setTimeout(() => setSaveStatus(""), 3000);
+      } else {
+        setSaveStatus(result.message || "Unable to save profile changes.");
+      }
+    } catch (error) {
+      console.error("Unable to save doctor profile", error);
+      setSaveStatus("Unable to save profile changes.");
+    }
   };
 
   const daysOptions = [
@@ -114,9 +214,9 @@ export default function AdminDoctorProfile() {
               </label>
               <input
                 type="number"
-                name="fee"
+                name="consultationFee"
                 required
-                value={profileData.fee}
+                value={profileData.consultationFee}
                 onChange={handleInputChange}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-blue-600 outline-none focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition"
               />
