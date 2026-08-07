@@ -14,17 +14,23 @@ export default function Settings() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [statusMsg, setStatusMsg] = useState({ type: "", text: "" });
+  const [lastSavedAt, setLastSavedAt] = useState("");
 
   // Fetch persisted system settings from backend
   const fetchSettings = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await fetch("/api/settings");
+      const res = await fetch("/api/settings", { credentials: "include" });
       if (!res.ok) throw new Error("Failed to load system configurations.");
 
       const json = await res.json();
       if (json.data) {
         setSettings(json.data);
+        setLastSavedAt(
+          json.data.updatedAt
+            ? new Date(json.data.updatedAt).toLocaleString()
+            : "Not saved yet",
+        );
       }
     } catch (err) {
       setStatusMsg({ type: "error", text: err.message });
@@ -54,6 +60,7 @@ export default function Settings() {
     try {
       const res = await fetch("/api/settings", {
         method: "PUT",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(settings),
       });
@@ -65,6 +72,11 @@ export default function Settings() {
 
       const updatedJson = await res.json();
       setSettings(updatedJson.data);
+      setLastSavedAt(
+        updatedJson.data.updatedAt
+          ? new Date(updatedJson.data.updatedAt).toLocaleString()
+          : "Just now",
+      );
 
       setStatusMsg({
         type: "success",
@@ -98,6 +110,9 @@ export default function Settings() {
           <p className="text-sm text-slate-500 mt-0.5">
             Configure system rules, dispatch frameworks, buffer policies, and
             live clinic variables.
+          </p>
+          <p className="text-xs text-slate-400 mt-1">
+            Last saved: {lastSavedAt || "loading..."}
           </p>
         </div>
 
@@ -146,6 +161,24 @@ export default function Settings() {
                 onChange={handleChange}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-mono text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition"
               />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                Current Service Status
+              </label>
+              <select
+                name="systemStatus"
+                value={settings.systemStatus}
+                onChange={handleChange}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 font-medium outline-none focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition"
+              >
+                <option value="Operational">Operational</option>
+                <option value="Maintenance">Maintenance</option>
+                <option value="Offline">Offline</option>
+                <option value="Limited Availability">
+                  Limited Availability
+                </option>
+              </select>
             </div>
           </div>
         </div>
@@ -220,7 +253,7 @@ export default function Settings() {
               <button
                 type="button"
                 onClick={() => handleToggle("enableReminders")}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                   settings.enableReminders ? "bg-blue-600" : "bg-slate-200"
                 }`}
               >
@@ -246,7 +279,7 @@ export default function Settings() {
               <button
                 type="button"
                 onClick={() => handleToggle("autoApproveInsurance")}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                   settings.autoApproveInsurance ? "bg-blue-600" : "bg-slate-200"
                 }`}
               >

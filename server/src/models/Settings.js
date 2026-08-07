@@ -4,12 +4,19 @@ const settingsSchema = new mongoose.Schema(
   {
     clinicName: {
       type: String,
-      required: true,
+      trim: true,
+      required: [true, "Clinic name is required"],
       default: "DocBook Executive Clinics",
     },
     supportEmail: {
       type: String,
-      required: true,
+      trim: true,
+      lowercase: true,
+      required: [true, "Support email is required"],
+      match: [
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        "Please provide a valid support email address",
+      ],
       default: "ops@docbook.com",
     },
     slotDuration: {
@@ -34,6 +41,7 @@ const settingsSchema = new mongoose.Schema(
     },
     systemStatus: {
       type: String,
+      trim: true,
       default: "Operational",
     },
   },

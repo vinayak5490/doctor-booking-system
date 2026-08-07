@@ -4,8 +4,9 @@ import authRoutes from "./routes/auth.routes.js";
 import appointmentRoutes from "./routes/appointment.routes.js";
 // import adminRoutes from "./routes/admin.routes.js"; //New
 import doctorRoutes from "./routes/doctor.routes.js"; //New
+import settingsRoutes from "./routes/settings.routes.js";
 import cookieParser from "cookie-parser";
-import patientRoutes from './routes/patient.routes.js';
+import patientRoutes from "./routes/patient.routes.js";
 
 const app = express();
 
@@ -19,7 +20,7 @@ app.use(
 
 //body parsing middleware
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser()); // Enable cookie parsing
 
 //Routing mounts
@@ -27,16 +28,17 @@ app.use("/api/auth", authRoutes);
 app.use("/api/appointments", appointmentRoutes); //Hooked up successfully
 // app.use("/api/admin", adminRoutes); // /api/admin/dashboard
 app.use("/api/doctor", doctorRoutes); // /api/doctor
+app.use("/api/settings", settingsRoutes);
 
 //Mount the patient routes
-app.use('/api/patients', patientRoutes);
+app.use("/api/patients", patientRoutes);
 
 //catch-all 404 route handler
-app.use((req, res)=>{
-    res.status(404).json({
-        success: false,
-        manage: `Resources Not Found: ${req.originalUrl}`
-    })
-})
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    manage: `Resources Not Found: ${req.originalUrl}`,
+  });
+});
 
 export default app;
