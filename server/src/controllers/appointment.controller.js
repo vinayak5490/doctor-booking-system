@@ -1,29 +1,74 @@
 import Appointment from "../models/Appointment.js";
+import sendEmail from "../utils/sendEmail.js";
 // @desc    Book an Appointment
 // @route   POST /api/appointments
 // @access  Public
 
 export const createAppointment = async (req, res)=>{
     try{
-        const { patientName, phone, email, age, gender, symptoms, date, slot } = req.body;
-        //check if slot conflict exist on the specific date configuration
-        const existingConflict = await Appointment.findOne({date, slot, status: {$ne: "Cancelled"}});
-        if(existingConflict){
-            return res.status(400).json({success: false, message: "This operational slot is already booked."});
-        }
+      const { patientName, phone, email, age, gender, symptoms, date, slot } =
+        req.body;
+      //check if slot conflict exist on the specific date configuration
+      const existingConflict = await Appointment.findOne({
+        date,
+        slot,
+        status: { $ne: "Cancelled" },
+      });
+      if (existingConflict) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message: "This operational slot is already booked.",
+          });
+      }
 
-        const newAppointment = await Appointment.create({
-            patientName,
-            phone,
-            email,
-            age,
-            gender,
-            symptoms,
-            date,
-            slot
+      const newAppointment = await Appointment.create({
+        patientName,
+        phone,
+        email,
+        age,
+        gender,
+        symptoms,
+        date,
+        slot,
+      });
+
+      // 2. Build email template
+      const emailSubject = "Appointment Confirmation - DocBook";
+      const emailHtml = `
+      <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+        <h2 style="color: #2563eb;">Appointment Confirmed!</h2>
+        <p>Dear <strong>${patientName}</strong>,</p>
+        <p>Your appointment with <strong>${doctorName}</strong> has been successfully booked.</p>
+        
+        <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 5px 0;"><strong>Date:</strong> ${appointmentDate}</p>
+          <p style="margin: 5px 0;"><strong>Time Slot:</strong> ${timeSlot}</p>
+        </div>
+
+        <p>If you need to reschedule or cancel, please visit your account dashboard.</p>
+        <br/>
+        <p>Regards,<br/><strong>DocBook Team</strong></p>
+      </div>
+    `;
+
+      // 3. Send email to patient (wrapped in try-catch so failure won't break appointment creation)
+      try {
+        await sendEmail({
+          to: patientEmail,
+          subject: emailSubject,
+          html: emailHtml,
         });
+      } catch (emailError) {
+        console.error("Email notification failed:", emailError.message);
+      }
 
-        res.status(201).json({success: true, message: "Appointment required successfully.", data: newAppointment});
+      res.status(201).json({
+        success: true,
+        message: "Appointment booked successfully and confirmation email sent!",
+        data: appointment,
+      });
     }catch(error){
         res.status(500).json({success: false, message: error.message});
     }
