@@ -220,10 +220,40 @@ export const updateAppointmentStatus = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Record targets not found." });
     }
+
+    const statusEmailHtml = `
+      <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+        <h2 style="color: #2563eb;">Appointment Status Updated</h2>
+        <p>Dear <strong>${record.patientName}</strong>,</p>
+        <p>Your appointment status has been updated to <strong>${record.status}</strong>.</p>
+        <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin: 20px 0;">
+          <p style="margin: 5px 0;"><strong>Booking ID:</strong> ${record.bookingId || record._id}</p>
+          <p style="margin: 5px 0;"><strong>Date:</strong> ${record.date}</p>
+          <p style="margin: 5px 0;"><strong>Time Slot:</strong> ${record.slot}</p>
+          <p style="margin: 5px 0;"><strong>Current Status:</strong> ${record.status}</p>
+        </div>
+        <p>If you have any questions or need assistance, please contact our team.</p>
+        <p>Regards,<br/><strong>DocBook Team</strong></p>
+      </div>
+    `;
+
+    const emailResult = await sendEmail({
+      to: record.email,
+      subject: `Appointment ${record.status} - DocBook`,
+      html: statusEmailHtml,
+    })
+      .then((info) => ({ status: "fulfilled", response: info.response }))
+      .catch((err) => ({ status: "rejected", error: err.message || err }));
+
+    if (emailResult.status === "rejected") {
+      console.error("Status update email failed:", emailResult.error);
+    }
+
     res.status(200).json({
       success: true,
       message: `Status updated to ${status}.`,
       data: record,
+      emailStatus: emailResult,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
