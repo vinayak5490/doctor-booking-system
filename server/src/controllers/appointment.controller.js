@@ -235,23 +235,32 @@ export const updateAppointmentStatus = async (req, res) => {
       </div>
     `;
 
-    const emailResult = await sendEmail({
-      to: record.email,
-      subject: `Appointment ${record.status} - DocBook`,
-      html: statusEmailHtml,
-    })
-      .then((info) => ({ status: "fulfilled", response: info.response }))
-      .catch((err) => ({ status: "rejected", error: err.message || err }));
-
-    if (emailResult.status === "rejected") {
-      console.error("Status update email failed:", emailResult.error);
-    }
-
+    // Respond immediately to minimize admin UI latency
     res.status(200).json({
       success: true,
       message: `Status updated to ${status}.`,
       data: record,
-      emailStatus: emailResult,
+      emailStatus: { status: "queued" },
+    });
+
+    // Send status update email asynchronously in background
+    setImmediate(async () => {
+      try {
+        const result = await sendEmail({
+          to: record.email,
+          subject: `Appointment ${record.status} - DocBook`,
+          html: statusEmailHtml,
+        });
+        console.log(
+          `Status update email sent to ${record.email}:`,
+          result.response,
+        );
+      } catch (err) {
+        console.error(
+          "Background status update email failed:",
+          err?.message || err,
+        );
+      }
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
