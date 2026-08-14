@@ -16,13 +16,14 @@ export const adminLogin = async(req, res) =>{
             //cookie options
             const cookieOptions = {
                 httpOnly: true, //prevent client-side js from reading the cookie
-                secure: process.env.NODE_ENV == "production", //set to true in production (https)
+                secure: true, //set to true in production (https)
                 sameSite: "strict", //protect against cross-site request forgery (CSRF)
                 maxAge: 24 * 60 *60 * 1000, //1 day
             };
 
             res.cookie("adminToken", token, cookieOptions).status(200).json({
                 success: true,
+
                 message: "Authentication successful.",
                 admin: {
                     id: admin._id,
@@ -57,6 +58,8 @@ export const getMe = async(req, res)=>{
 export const adminLogout = async(req, res)=>{
     res.cookie("adminToken", "", {
         httpOnly: true,
+        secure: true,
+        sameSite: "none",
         expires: new Date(0), //Expire cookie immediately
     });
 
