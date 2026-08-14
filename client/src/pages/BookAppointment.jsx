@@ -24,6 +24,9 @@ const defaultDoctorProfile = {
 
 export default function BookAppointment() {
   const navigate = useNavigate();
+  const API_URL =
+    import.meta.env.VITE_API_URL ||
+    "https://doctor-booking-system-gxud.onrender.com";
 
   const today = new Date().toISOString().split("T")[0];
   // Step-by-step active state tracking
@@ -52,7 +55,7 @@ export default function BookAppointment() {
   useEffect(() => {
     const loadDoctorProfile = async () => {
       try {
-        const response = await fetch("/api/doctor", {
+        const response = await fetch("${API_URL}/api/doctor", {
           method: "GET",
           headers: { "Content-Type": "application/json" },
         });
@@ -93,7 +96,10 @@ export default function BookAppointment() {
         slot: selectedSlot,
       };
 
-      const response = await axios.post("/api/appointments", appointmentData);
+      const response = await axios.post(
+        "${API_URL}/api/appointments",
+        appointmentData,
+      );
 
       toast.success(response.data.message);
       navigate("/booking-success", {

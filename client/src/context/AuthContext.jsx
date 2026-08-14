@@ -6,6 +6,9 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) =>{
     const [admin, setAdmin] = useState(null);
     const [loading, setLoading] = useState(true);
+    const API_URL =
+      import.meta.env.VITE_API_URL ||
+      "https://doctor-booking-system-gxud.onrender.com";
 
     //check authentication status when app loads
     useEffect(()=>{
@@ -14,7 +17,7 @@ export const AuthProvider = ({ children }) =>{
 
     const checkAuth = async()=>{
         try {
-            const res = await fetch("http://localhost:5000/api/auth/me", {
+            const res = await fetch("${API_URL}/api/auth/me", {
                 method: "GET",
                 credentials: "include", //Essential for sending HttpOnly cookie
             });
@@ -33,11 +36,11 @@ export const AuthProvider = ({ children }) =>{
     };
 
     const login = async (email, password)=>{
-        const res = await fetch("http://localhost:5000/api/auth/login", {
-            method: 'POST',
-            headers: { "Content-Type": "application/json"},
-            credentials: "include",
-            body: JSON.stringify({email, password}),
+        const res = await fetch("${API_URL}/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ email, password }),
         });
 
         const data = await res.json();
@@ -48,9 +51,9 @@ export const AuthProvider = ({ children }) =>{
     };
 
     const logout = async()=>{
-        await fetch("http://localhost:5000/api/auth/logout",{
-            method: "POST",
-            credentials: "include",
+        await fetch("${API_URL}/api/auth/logout", {
+          method: "POST",
+          credentials: "include",
         });
         setAdmin(null);
     };
