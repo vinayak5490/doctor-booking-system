@@ -10,11 +10,24 @@ import patientRoutes from "./routes/patient.routes.js";
 
 const app = express();
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  process.env.CLIENT_URL, // e.g., https://doctor-booking-system-nu.vercel.app
+  "https://doctor-booking-system-nu.vercel.app",
+].filter(Boolean);
+
 // CORS configuration must allow credentials for HttpOnly cookies to pass through
 app.use(
   cors({
-    origin: "http://localhost:5173" || "https://doctor-booking-system-gxud.onrender.com", // Your React App URL
-    credentials: true, // Essential for passing HttpOnly cookies
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps, curl, or Postman)
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("CORS policy violation"));
+    },
+    credentials: true, // Essential for HttpOnly cookies
   }),
 );
 
