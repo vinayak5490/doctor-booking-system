@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) =>{
 
     const checkAuth = async()=>{
         try {
-            const res = await fetch(`${API_URL}/api/auth/me`, {
+            const res = await fetch(`/api/auth/me`, {
                 method: "GET",
                 credentials: "include", //Essential for sending HttpOnly cookie
             });
@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }) =>{
     };
 
     const login = async (email, password)=>{
-        const res = await fetch(`${API_URL}/api/auth/login`, {
+        const res = await fetch(`/api/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }) =>{
     };
 
     const logout = async()=>{
-        await fetch(`${API_URL}/api/auth/logout`, {
+        await fetch(`/api/auth/logout`, {
           method: "POST",
           credentials: "include",
         });
