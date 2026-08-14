@@ -1,36 +1,40 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Login() {
-    const navigate = useNavigate();
-    const { login } = useAuth();
-    const [credentials, setCredentials] = useState({email: "", password: ""});
-    const [error, setError] = useState("");
-    const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  const [credentials, setCredentials] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-    const handleInputChange = (e) => {
-        setCredentials({...credentials, [e.target.name]: e.target.value});
-        if(error) setError("");
-    };
+  const handleInputChange = (e) => {
+    setCredentials({ ...credentials, [e.target.name]: e.target.value });
+    if (error) setError("");
+  };
 
-    const handleLoginSubmit = async(e) => {
-        e.preventDefault();
-        setLoading(true);
+  const handleLoginSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
 
-       try {
-        const data = await login(credentials.email, credentials.password);
-        if(data.success){
-          navigate("admin/dashboard");
-        }else{
-          setError(data.message || "Invalid administrative email or security password");
-        }
-       } catch (error) {
-        setError("unable to connect to authentication server. Please check your network.")
-       }finally{
-        setLoading(false);
-       }
-    };
+    try {
+      const data = await login(credentials.email, credentials.password);
+      if (data.success) {
+        navigate("/admin/dashboard");
+      } else {
+        setError(
+          data.message || "Invalid administrative email or security password",
+        );
+      }
+    } catch (error) {
+      setError(
+        "unable to connect to authentication server. Please check your network.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-xl border border-slate-200">
@@ -132,8 +136,12 @@ export default function Login() {
         </form>
 
         {/* Back-door helper text for your initial sandbox testing */}
-        <div className='bg-slate-50 border border-dashed border-slate-200 rounded-xl p-3 text-center text-xs text-slate-400'>
-            Demo: <span className='font-semibold text-slate-600'>admin@docbook.com</span> / <span className='font-semibold text-slate-600'>admin123</span>
+        <div className="bg-slate-50 border border-dashed border-slate-200 rounded-xl p-3 text-center text-xs text-slate-400">
+          Demo:{" "}
+          <span className="font-semibold text-slate-600">
+            admin@docbook.com
+          </span>{" "}
+          / <span className="font-semibold text-slate-600">admin123</span>
         </div>
       </div>
     </div>
