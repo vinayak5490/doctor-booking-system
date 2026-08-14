@@ -13,7 +13,7 @@ const app = express();
 // CORS configuration must allow credentials for HttpOnly cookies to pass through
 app.use(
   cors({
-    origin: "http://localhost:5173", // Your React App URL
+    origin: "http://localhost:5173" || "https://doctor-booking-system-gxud.onrender.com", // Your React App URL
     credentials: true, // Essential for passing HttpOnly cookies
   }),
 );
