@@ -55,7 +55,7 @@ export default function BookAppointment() {
   useEffect(() => {
     const loadDoctorProfile = async () => {
       try {
-        const response = await fetch("${API_URL}/api/doctor", {
+        const response = await fetch(`/api/doctor`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
         });
@@ -96,10 +96,7 @@ export default function BookAppointment() {
         slot: selectedSlot,
       };
 
-      const response = await axios.post(
-        "${API_URL}/api/appointments",
-        appointmentData,
-      );
+      const response = await axios.post("/api/appointments", appointmentData);
 
       toast.success(response.data.message);
       navigate("/booking-success", {
