@@ -67,47 +67,45 @@ export const createAppointment = async (req, res) => {
       </div>
     `;
 
-    // 5. Dispatch both emails concurrently without blocking DB response failure
-    const emailResults = await Promise.allSettled([
-      sendEmail({
-        to: patientEmail,
-        subject: "Appointment Confirmation - DocBook",
-        html: patientHtml,
-      }),
-      sendEmail({
-        to: doctorEmail,
-        subject: `New Booking Notification: ${patientName}`,
-        html: doctorHtml,
-      }),
-    ]);
-
-    const emailStatus = emailResults.map((result, index) => {
-      const recipient = index === 0 ? "patient" : "doctor";
-      if (result.status === "fulfilled") {
-        return {
-          recipient,
-          status: "fulfilled",
-          response: result.value.response,
-        };
-      }
-
-      console.error(
-        `Email dispatch error (${recipient}):`,
-        result.reason?.message || result.reason,
-      );
-      return {
-        recipient,
-        status: "rejected",
-        error: result.reason?.message || result.reason,
-      };
-    });
-
+    // 5. Respond to client immediately after DB write to minimize latency
     res.status(201).json({
       success: true,
       message:
-        "Appointment booked successfully! Confirmation emails are being sent.",
+        "Appointment booked successfully. Confirmation emails are being sent.",
       data: appointment,
-      emailStatus,
+    });
+
+    // 6. Send emails asynchronously in the background (fire-and-forget)
+    // Use setImmediate to avoid blocking the event loop during the response
+    setImmediate(async () => {
+      try {
+        const results = await Promise.allSettled([
+          sendEmail({
+            to: patientEmail,
+            subject: "Appointment Confirmation - DocBook",
+            html: patientHtml,
+          }),
+          sendEmail({
+            to: doctorEmail,
+            subject: `New Booking Notification: ${patientName}`,
+            html: doctorHtml,
+          }),
+        ]);
+
+        results.forEach((result, i) => {
+          const recipient = i === 0 ? "patient" : "doctor";
+          if (result.status === "fulfilled") {
+            console.log(`Email sent to ${recipient}:`, result.value.response);
+          } else {
+            console.error(
+              `Background email error (${recipient}):`,
+              result.reason?.message || result.reason,
+            );
+          }
+        });
+      } catch (err) {
+        console.error("Unexpected background email error:", err);
+      }
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
