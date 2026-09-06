@@ -1,13 +1,15 @@
-import React from 'react'
-import { useLocation, useNavigate } from 'react-router-dom';
+import React from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function BookingSucess() {
-  const { state }  = useLocation(); //state variable holds the custom, hidden data you passed from your previous page.
+  const { state } = useLocation(); //state variable holds the custom, hidden data you passed from your previous page.
   const navigate = useNavigate();
 
   //Safety fallback metrics if state is missing
   const bookingDate = state?.date || "12 July 2026";
   const bookingTime = state?.time || "10:30 AM";
+  const bookingId = state?.bookingId || "Pending";
+  const doctorName = state?.doctorName || "Dr. Arjun Mehta";
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-3xl shadow-lg border border-gray-100 p-8 text-center space-y-6">
@@ -21,7 +23,7 @@ export default function BookingSucess() {
             Appointment Confirmed
           </h2>
           <p className="text-sm text-green-600 font-medium">
-            A confirmation email has been sent successfully.
+            Your confirmation email is being sent.
           </p>
         </div>
 
@@ -30,12 +32,12 @@ export default function BookingSucess() {
           <div className="flex justify-between border-b pb-2">
             <span className="text-gray-500">Booking ID:</span>
             <span className="font-mono font-bold text-blue-600">
-              APT-93K82A
+              {bookingId}
             </span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-500">Doctor:</span>
-            <span className="font-semibold text-gray-900">Dr. Arjun Mehta</span>
+            <span className="font-semibold text-gray-900">{doctorName}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-500">Date:</span>

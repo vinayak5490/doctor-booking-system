@@ -28,80 +28,75 @@ export const createAppointment = async (req, res) => {
       slot,
     });
 
-    // 2. Retrieve primary doctor email (fallback to system admin if absent)
-    const doctor = await Doctor.findOne();
-    const doctorEmail = doctor?.email || process.env.EMAIL_USER;
-    const doctorName = doctor?.name || "Dr. Arjun Mehta";
-
-    // 3. Email Template for Patient
-    const patientHtml = `
-      <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-        <h2 style="color: #2563eb;">Appointment Confirmed!</h2>
-        <p>Dear <strong>${patientName}</strong>,</p>
-        <p>Your appointment with <strong>${doctorName}</strong> has been successfully booked.</p>
-        
-        <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin: 20px 0;">
-          <p style="margin: 5px 0;"><strong>Date:</strong> ${date}</p>
-          <p style="margin: 5px 0;"><strong>Time Slot:</strong> ${slot}</p>
-          <p style="margin: 5px 0;"><strong>Symptoms:</strong> ${symptoms || "N/A"}</p>
-        </div>
-
-        <p>Regards,<br/><strong>DocBook Team</strong></p>
-      </div>
-    `;
-
-    // 4. Email Template for Doctor / Admin
-    const doctorHtml = `
-      <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-        <h2 style="color: #059669;">New Appointment Alert! 🗓️</h2>
-        <p>Dear <strong>${doctorName}</strong>,</p>
-        <p>A new appointment has been scheduled with the following details:</p>
-        
-        <div style="background-color: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0; margin: 20px 0;">
-          <p style="margin: 5px 0;"><strong>Patient:</strong> ${patientName} (${gender}, ${age} yrs)</p>
-          <p style="margin: 5px 0;"><strong>Phone:</strong> ${phone}</p>
-          <p style="margin: 5px 0;"><strong>Email:</strong> ${patientEmail}</p>
-          <p style="margin: 5px 0;"><strong>Date & Time:</strong> ${date} at ${slot}</p>
-          <p style="margin: 5px 0;"><strong>Chief Complaints:</strong> ${symptoms || "None provided"}</p>
-        </div>
-      </div>
-    `;
-
-    // Wait for both sends before responding so hosted processes cannot end the
-    // request while the fire-and-forget work is still in progress.
-    const emailResults = await Promise.allSettled([
-      sendEmail({
-        to: patientEmail,
-        subject: "Appointment Confirmation - DocBook",
-        html: patientHtml,
-      }),
-      sendEmail({
-        to: doctorEmail,
-        subject: `New Booking Notification: ${patientName}`,
-        html: doctorHtml,
-      }),
-    ]);
-
-    emailResults.forEach((result, i) => {
-      const recipient = i === 0 ? "patient" : "doctor";
-      if (result.status === "fulfilled") {
-        console.log(`Email sent to ${recipient}:`, result.value.response);
-      } else {
-        console.error(
-          `Email error (${recipient}):`,
-          result.reason?.message || result.reason,
-        );
-      }
-    });
-
     res.status(201).json({
       success: true,
       message: "Appointment booked successfully.",
       data: appointment,
-      emailStatus: {
-        patient: emailResults[0].status,
-        doctor: emailResults[1].status,
-      },
+      emailStatus: "queued",
+    });
+
+    setImmediate(async () => {
+      try {
+        const doctor = await Doctor.findOne().lean();
+        const doctorEmail = doctor?.email || process.env.EMAIL_USER;
+        const doctorName = doctor?.name || "Dr. Arjun Mehta";
+
+        const patientHtml = `
+          <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+            <h2 style="color: #2563eb;">Appointment Confirmed!</h2>
+            <p>Dear <strong>${patientName}</strong>,</p>
+            <p>Your appointment with <strong>${doctorName}</strong> has been successfully booked.</p>
+            <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin: 20px 0;">
+              <p style="margin: 5px 0;"><strong>Date:</strong> ${date}</p>
+              <p style="margin: 5px 0;"><strong>Time Slot:</strong> ${slot}</p>
+              <p style="margin: 5px 0;"><strong>Symptoms:</strong> ${symptoms || "N/A"}</p>
+            </div>
+            <p>Regards,<br/><strong>DocBook Team</strong></p>
+          </div>
+        `;
+
+        const doctorHtml = `
+          <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+            <h2 style="color: #059669;">New Appointment Alert!</h2>
+            <p>Dear <strong>${doctorName}</strong>,</p>
+            <p>A new appointment has been scheduled with the following details:</p>
+            <div style="background-color: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0; margin: 20px 0;">
+              <p style="margin: 5px 0;"><strong>Patient:</strong> ${patientName} (${gender}, ${age} yrs)</p>
+              <p style="margin: 5px 0;"><strong>Phone:</strong> ${phone}</p>
+              <p style="margin: 5px 0;"><strong>Email:</strong> ${patientEmail}</p>
+              <p style="margin: 5px 0;"><strong>Date & Time:</strong> ${date} at ${slot}</p>
+              <p style="margin: 5px 0;"><strong>Chief Complaints:</strong> ${symptoms || "None provided"}</p>
+            </div>
+          </div>
+        `;
+
+        const emailResults = await Promise.allSettled([
+          sendEmail({
+            to: patientEmail,
+            subject: "Appointment Confirmation - DocBook",
+            html: patientHtml,
+          }),
+          sendEmail({
+            to: doctorEmail,
+            subject: `New Booking Notification: ${patientName}`,
+            html: doctorHtml,
+          }),
+        ]);
+
+        emailResults.forEach((result, index) => {
+          const recipient = index === 0 ? "patient" : "doctor";
+          if (result.status === "fulfilled") {
+            console.log(`Email sent to ${recipient}:`, result.value.response);
+          } else {
+            console.error(
+              `Email error (${recipient}):`,
+              result.reason?.message || result.reason,
+            );
+          }
+        });
+      } catch (error) {
+        console.error("Background booking email error:", error.message);
+      }
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

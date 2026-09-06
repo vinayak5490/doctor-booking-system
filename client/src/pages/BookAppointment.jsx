@@ -33,6 +33,7 @@ export default function BookAppointment() {
   const [selectedDate, setSelectedDate] = useState(today);
   const [selectedSlot, setSelectedSlot] = useState("");
   const [doctor, setDoctor] = useState(defaultDoctorProfile);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
@@ -84,6 +85,9 @@ export default function BookAppointment() {
 
   const handleBookingSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
     try {
       const appointmentData = {
         patientName: formData.fullName,
@@ -100,13 +104,22 @@ export default function BookAppointment() {
 
       toast.success(response.data.message);
       navigate("/booking-success", {
-        state: { date: selectedDate, time: selectedSlot, ...formData },
+        state: {
+          date: selectedDate,
+          time: selectedSlot,
+          bookingId: response.data.data?.bookingId,
+          doctorName: doctor.name,
+          emailStatus: response.data.emailStatus,
+          ...formData,
+        },
       });
     } catch (error) {
       console.error(error);
       toast.error(
         error.response?.data?.message || "Unable to book appointment.",
       );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -325,9 +338,12 @@ export default function BookAppointment() {
 
               <button
                 type="submit"
+                disabled={isSubmitting}
                 className="w-full bg-blue-600 text-white font-semibold py-3 rounded-xl hover:bg-blue-700 shadow-md transition mt-4"
               >
-                Confirm & Book Appointment
+                {isSubmitting
+                  ? "Booking appointment..."
+                  : "Confirm & Book Appointment"}
               </button>
             </form>
           )}
