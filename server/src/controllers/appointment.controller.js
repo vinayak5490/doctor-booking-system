@@ -67,45 +67,41 @@ export const createAppointment = async (req, res) => {
       </div>
     `;
 
-    // 5. Respond to client immediately after DB write to minimize latency
-    res.status(201).json({
-      success: true,
-      message:
-        "Appointment booked successfully. Confirmation emails are being sent.",
-      data: appointment,
+    // Wait for both sends before responding so hosted processes cannot end the
+    // request while the fire-and-forget work is still in progress.
+    const emailResults = await Promise.allSettled([
+      sendEmail({
+        to: patientEmail,
+        subject: "Appointment Confirmation - DocBook",
+        html: patientHtml,
+      }),
+      sendEmail({
+        to: doctorEmail,
+        subject: `New Booking Notification: ${patientName}`,
+        html: doctorHtml,
+      }),
+    ]);
+
+    emailResults.forEach((result, i) => {
+      const recipient = i === 0 ? "patient" : "doctor";
+      if (result.status === "fulfilled") {
+        console.log(`Email sent to ${recipient}:`, result.value.response);
+      } else {
+        console.error(
+          `Email error (${recipient}):`,
+          result.reason?.message || result.reason,
+        );
+      }
     });
 
-    // 6. Send emails asynchronously in the background (fire-and-forget)
-    // Use setImmediate to avoid blocking the event loop during the response
-    setImmediate(async () => {
-      try {
-        const results = await Promise.allSettled([
-          sendEmail({
-            to: patientEmail,
-            subject: "Appointment Confirmation - DocBook",
-            html: patientHtml,
-          }),
-          sendEmail({
-            to: doctorEmail,
-            subject: `New Booking Notification: ${patientName}`,
-            html: doctorHtml,
-          }),
-        ]);
-
-        results.forEach((result, i) => {
-          const recipient = i === 0 ? "patient" : "doctor";
-          if (result.status === "fulfilled") {
-            console.log(`Email sent to ${recipient}:`, result.value.response);
-          } else {
-            console.error(
-              `Background email error (${recipient}):`,
-              result.reason?.message || result.reason,
-            );
-          }
-        });
-      } catch (err) {
-        console.error("Unexpected background email error:", err);
-      }
+    res.status(201).json({
+      success: true,
+      message: "Appointment booked successfully.",
+      data: appointment,
+      emailStatus: {
+        patient: emailResults[0].status,
+        doctor: emailResults[1].status,
+      },
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
